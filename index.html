@@ -7,20 +7,20 @@
 <style>
 :root{
   --bg:#f5f6f8;--surface:#ffffff;--ink:#15181c;--ink2:#3b4149;--muted:#69717b;--line:#e2e5e9;--grid:#eceef1;
-  --accent:#2a78d6;--accent-ink:#ffffff;--nodata:#d3d6db;--na:#eceef1;--hatch:#b9bec6;--ocean:#eaf1f7;--grat:#d8e2ec;--bnd:#ffffff;--disp:#555b63;
+  --accent:#2a78d6;--accent-ink:#ffffff;--nodata:#d3d6db;--off:#f4f5f7;--na:#eceef1;--hatch:#b9bec6;--ocean:#eaf1f7;--grat:#d8e2ec;--bnd:#ffffff;--disp:#555b63;
   --chip:#eef1f4;--sel:#111111;--hit:#2a78d610;--warn:#8a5a00;--warnbg:#fff6e0;
   color-scheme:light;
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
     --bg:#101215;--surface:#191c21;--ink:#eef0f3;--ink2:#c8cdd4;--muted:#8d95a0;--line:#2b2f36;--grid:#24282e;
-    --accent:#5b9cf0;--accent-ink:#0d1117;--nodata:#3a3f47;--na:#2a2e35;--hatch:#555b64;--ocean:#141b24;--grat:#1f2a36;--bnd:#191c21;--disp:#c8cdd4;
+    --accent:#5b9cf0;--accent-ink:#0d1117;--nodata:#3a3f47;--off:#1f2329;--na:#2a2e35;--hatch:#555b64;--ocean:#141b24;--grat:#1f2a36;--bnd:#191c21;--disp:#c8cdd4;
     --chip:#252930;--sel:#ffffff;--hit:#5b9cf018;--warn:#f0c060;--warnbg:#2b2416;color-scheme:dark;
   }
 }
 :root[data-theme="dark"]{
   --bg:#101215;--surface:#191c21;--ink:#eef0f3;--ink2:#c8cdd4;--muted:#8d95a0;--line:#2b2f36;--grid:#24282e;
-  --accent:#5b9cf0;--accent-ink:#0d1117;--nodata:#3a3f47;--na:#2a2e35;--hatch:#555b64;--ocean:#141b24;--grat:#1f2a36;--bnd:#191c21;--disp:#c8cdd4;
+  --accent:#5b9cf0;--accent-ink:#0d1117;--nodata:#3a3f47;--off:#1f2329;--na:#2a2e35;--hatch:#555b64;--ocean:#141b24;--grat:#1f2a36;--bnd:#191c21;--disp:#c8cdd4;
   --chip:#252930;--sel:#ffffff;--hit:#5b9cf018;--warn:#f0c060;--warnbg:#2b2416;color-scheme:dark;
 }
 *{box-sizing:border-box}
@@ -64,6 +64,7 @@ section.view.on{display:block}
 .ocean{fill:var(--ocean)}
 .grat{fill:none;stroke:var(--grat);stroke-width:.6;vector-effect:non-scaling-stroke}
 .cty{stroke:none;cursor:pointer}
+.cty.out{pointer-events:none;cursor:default}
 .dot{stroke:var(--bnd);stroke-width:.8;vector-effect:non-scaling-stroke;cursor:pointer}
 .bnd{fill:none;stroke:var(--bnd);stroke-width:.5;vector-effect:non-scaling-stroke;pointer-events:none}
 .disp{fill:none;stroke:var(--disp);stroke-width:.8;vector-effect:non-scaling-stroke;pointer-events:none}
@@ -146,7 +147,7 @@ table.dt tr:hover td{background:var(--hit)}
   <div class="controls">
     <div class="ctl wide"><label for="selHz">Hazard</label><select id="selHz"></select></div>
     <div class="ctl"><label for="selGrp">Population group</label><select id="selGrp"></select></div>
-    <div class="ctl wide"><label for="selGeo">Geography (profile, demographics, futures, multi-hazard)</label><select id="selGeo"></select></div>
+    <div class="ctl wide"><label for="selGeo">Geography (map and all tabs)</label><select id="selGeo"></select></div>
   </div>
   <nav class="tabs" role="tablist" id="tabs">
     <button data-tab="map" aria-selected="true">Map</button>
@@ -175,7 +176,6 @@ table.dt tr:hover td{background:var(--hit)}
     <div class="ctl" data-for="ssp"><label for="selMapSsp">Scenario</label><select id="selMapSsp"></select></div>
     <div class="ctl" data-for="ssp"><label for="selMapYear">2025 to</label><select id="selMapYear"></select></div>
     <div class="ctl" data-for="multi"><label for="selMapN">At least N hazards</label><select id="selMapN"></select></div>
-    <div class="ctl"><label for="selZoom">Zoom to</label><select id="selZoom"></select></div>
   </div>
   <div class="mapwrap">
     <div class="card">
@@ -317,7 +317,7 @@ const GBY=Object.fromEntries(GROUPINGS.map(g=>[g.k,g]));
 const DISCLAIMER="The boundaries and names shown and the designations used on this map do not imply official endorsement or acceptance by the United Nations. Dotted line represents approximately the Line of Control in Jammu and Kashmir agreed upon by India and Pakistan. The final status of Jammu and Kashmir has not yet been agreed upon by the parties. Final boundary between the Republic of Sudan and the Republic of South Sudan has not yet been determined. Dashed lines represent undetermined boundaries. A dispute exists between the Governments of Argentina and the United Kingdom of Great Britain and Northern Ireland concerning sovereignty over the Falkland Islands (Malvinas).";
 
 let D,NC,NH,NG,NS,NY,NK,ALL,CIDX={},HIDX={},GVALS={},Y2025=0;
-const S={tab:"map",hz:0,g:0,geo:"world",measure:"pct",zoom:"world",mapSsp:1,mapYear:0,mapN:3,grouping:"r",cat:"all",comp:"1",groupingU:"r",sspM:"e",ssp:1,ovN:"all",sortCol:"r",sortDir:-1,search:"",minPop:true};
+const S={tab:"map",hz:0,g:0,geo:"world",measure:"pct",mapSsp:1,mapYear:0,mapN:3,grouping:"r",cat:"all",comp:"1",groupingU:"r",sspM:"e",ssp:1,ovN:"all",sortCol:"r",sortDir:-1,search:"",minPop:true};
 
 /* ---------- helpers ---------- */
 const $=s=>document.querySelector(s);
@@ -480,6 +480,10 @@ function buildMap(){
   D.geo.disp.forEach(l=>E_("path",{d:l.d,class:"disp "+(l.s==="jammu_kashmir"?"loc":"und")},svg));
   MAP.hov=E_("path",{class:"hov"},svg);MAP.sel=E_("path",{class:"selo"},svg);MAP.svg=svg;
   const bb=sph.getBBox();VB0={x:bb.x-200,y:bb.y-200,w:bb.width+400,h:bb.height+400};vb={...VB0};setVB();
+  MAP.paths.forEach(p=>{const c=p.__c;if(c==null)return;const b=p.getBBox(),d=D.countries[c];
+    /* shapes crossing the date line span the whole map: fall back to a box around the label point */
+    const r=b.width>15000?{x0:d.fx-1500,y0:b.y,x1:d.fx+1500,y1:b.y+b.height}:{x0:b.x,y0:b.y,x1:b.x+b.width,y1:b.y+b.height};
+    d.bb=d.bb?{x0:Math.min(d.bb.x0,r.x0),y0:Math.min(d.bb.y0,r.y0),x1:Math.max(d.bb.x1,r.x1),y1:Math.max(d.bb.y1,r.y1)}:r;});
   svg.addEventListener("mousemove",ev=>{const c=ev.target.__c;if(c==null){MAP.hov.removeAttribute("d");hideTip();return;}
     MAP.hov.setAttribute("d",D.countries[c].pd||"");showTip(ev,mapTip(c));});
   svg.addEventListener("mouseleave",()=>{MAP.hov.removeAttribute("d");hideTip();});
@@ -489,14 +493,21 @@ function buildMap(){
     if(!moved)return;const k=vb.w/svg.clientWidth;vb.x=drag.vb.x-dx*k*Math.max(1,(vb.w/vb.h)/(svg.clientWidth/svg.clientHeight));vb.y=drag.vb.y-dy*k;setVB();});
   window.addEventListener("pointerup",ev=>{if(drag&&!moved){const c=ev.target.__c;if(c!=null){S.geo="c|"+c;$("#selGeo").value=S.geo;renderAll();}}drag=null;box.classList.remove("drag");});
   svg.addEventListener("wheel",ev=>{ev.preventDefault();const r=svg.getBoundingClientRect();zoomAt(ev.deltaY<0?1/1.25:1.25,(ev.clientX-r.left)/r.width,(ev.clientY-r.top)/r.height);},{passive:false});
-  $("#zin").onclick=()=>zoomAt(1/1.5,.5,.5);$("#zout").onclick=()=>zoomAt(1.5,.5,.5);$("#zreset").onclick=()=>{S.zoom="world";$("#selZoom").value="world";vb={...VB0};setVB();renderMapSide();};
+  $("#zin").onclick=()=>zoomAt(1/1.5,.5,.5);$("#zout").onclick=()=>zoomAt(1.5,.5,.5);$("#zreset").onclick=()=>zoomToGeo(MAP.scope||"world");
 }
 function setVB(){MAP.svg.setAttribute("viewBox",`${vb.x} ${vb.y} ${vb.w} ${vb.h}`);}
 function zoomAt(f,fx,fy){const nw=Math.min(VB0.w*1.2,Math.max(VB0.w/40,vb.w*f)),k=nw/vb.w;const nh=vb.h*k;vb.x+= (vb.w-nw)*fx;vb.y+=(vb.h-nh)*fy;vb.w=nw;vb.h=nh;setVB();}
-function zoomToGeo(geo){if(geo==="world"){vb={...VB0};setVB();return;}const mem=members(geo).filter(c=>D.countries[c].fx!=null);if(!mem.length)return;
-  let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;mem.forEach(c=>{const d=D.countries[c];x0=Math.min(x0,d.fx);x1=Math.max(x1,d.fx);y0=Math.min(y0,d.fy);y1=Math.max(y1,d.fy);});
-  const pad=900;x0-=pad;x1+=pad;y0-=pad;y1+=pad;const ar=VB0.w/VB0.h;let w=x1-x0,h=y1-y0;if(w/h<ar){const nw=h*ar;x0-=(nw-w)/2;w=nw;}else{const nh=w/ar;y0-=(nh-h)/2;h=nh;}
-  vb={x:x0,y:y0,w,h};setVB();}
+function extentOf(mem){let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;mem.forEach(c=>{const b=D.countries[c].bb;x0=Math.min(x0,b.x0);x1=Math.max(x1,b.x1);y0=Math.min(y0,b.y0);y1=Math.max(y1,b.y1);});return[x0,y0,x1,y1];}
+function zoomToGeo(geo){if(geo==="world"){vb={...VB0};setVB();return;}let mem=members(geo).filter(c=>D.countries[c].bb);if(!mem.length)return;
+  let [x0,y0,x1,y1]=extentOf(mem);
+  /* groups split by the date line (e.g. Pacific islands): fit the half of the map holding most people */
+  if(x1-x0>.6*VB0.w){const pop=m=>m.reduce((t,c)=>t+(D.P[pI(0,c)]||0),0),E=mem.filter(c=>D.countries[c].fx>=0),W=mem.filter(c=>D.countries[c].fx<0);
+    const keep=pop(E)>=pop(W)?E:W;if(keep.length)[x0,y0,x1,y1]=extentOf(keep);}
+  const pad=Math.max(250,.05*Math.max(x1-x0,y1-y0));x0-=pad;x1+=pad;y0-=pad;y1+=pad;const ar=VB0.w/VB0.h;let w=x1-x0,h=y1-y0;if(w/h<ar){const nw=h*ar;x0-=(nw-w)/2;w=nw;}else{const nh=w/ar;y0-=(nh-h)/2;h=nh;}
+  if(w>VB0.w){vb={...VB0};setVB();return;}vb={x:x0,y:y0,w,h};setVB();}
+/* map scope: the selected world/group; a selected country keeps the current scope if it belongs to it, else its UNFPA region */
+function mapScope(){if(!S.geo.startsWith("c|"))return S.geo;const c=+S.geo.split("|")[1],cur=MAP.scope||"world";
+  if(cur==="world"||members(cur).includes(c))return cur;return"g|r|"+gval(c,"r");}
 function mapValue(c){const h=S.hz,g=S.g;
   switch(S.measure){
     case"pct":{const e=D.E[eI(h,g,c)],p=D.P[pI(g,c)];return e==null||!p?null:100*e/p;}
@@ -521,15 +532,18 @@ function mapTip(c){const d=D.countries[c],h=S.hz,g=S.g,i=eI(h,g,c);let s=`<b>${e
   if(S.measure==="multi")s+=tr("People",fN(D.MH[mhI(S.mapN-1,g,c)]));
   return s+'<div class="m" style="margin-top:4px">Click to select it as the geography for the other tabs</div>';}
 function renderMap(){
-  const fillOf=c=>c==null?"var(--nodata)":mapColor(naStatus(c)||mapValue(c));
-  MAP.paths.forEach(p=>{p.style.fill=fillOf(p.__c);});
-  MAP.dots.forEach(p=>{p.style.fill=fillOf(p.__c);});
+  const sc=mapScope(),filt=sc!=="world",inS=new Set(filt?members(sc):[]),out=c=>filt&&(c==null||!inS.has(c));
+  if(sc!==MAP.scope){MAP.scope=sc;zoomToGeo(sc);}
+  const fillOf=c=>out(c)?"var(--off)":c==null?"var(--nodata)":mapColor(naStatus(c)||mapValue(c));
+  MAP.paths.forEach(p=>{p.style.fill=fillOf(p.__c);p.classList.toggle("out",out(p.__c));});
+  MAP.dots.forEach(p=>{p.style.fill=fillOf(p.__c);p.style.display=out(p.__c)?"none":"";});
   const sel=S.geo.startsWith("c|")?D.countries[+S.geo.split("|")[1]].pd:null;if(sel)MAP.sel.setAttribute("d",sel);else MAP.sel.removeAttribute("d");
-  $("#mapTitle").textContent=measureName();
+  $("#mapTitle").textContent=measureName()+(filt?` (${geoName(sc)})`:"");
   let items;switch(S.measure){case"pct":case"multi":items=SEQ.map((c,i)=>({color:c,label:SEQ_LAB[i]}));break;case"num":items=BLU.map((c,i)=>({color:c,label:NUM_LAB[i]}));break;
     case"rural":items=GRN.map((c,i)=>({color:c,label:RUR_LAB[i]})).concat([{color:"var(--grid)",label:"No one exposed"}]);break;case"ssp":items=DIV.map((c,i)=>({color:c,label:DIV_LAB[i]}));break;}
   items=items.concat([{color:"var(--nodata)",label:"No data"},{hatch:true,label:"Disputed territory"}]);
   if(D.hazards[S.hz].k==="coastal_flood_100yr"&&S.measure!=="multi")items.push({color:"var(--na)",label:"Landlocked (no coast)"});
+  if(filt)items.push({color:"var(--off)",label:"Outside "+geoName(sc)});
   legend($("#mapLegend"),items);
   document.querySelectorAll("#v-map [data-for]").forEach(e=>e.style.display=e.dataset.for===S.measure?"":"none");
   const note=$("#mapNote");
@@ -540,7 +554,7 @@ function renderMap(){
   renderMapSide();
 }
 function renderMapSide(){
-  const scope=S.zoom,mem=members(scope),a=agg(S.hz,S.g,mem),nm=geoName(scope);
+  const scope=MAP.scope||"world",mem=members(scope),a=agg(S.hz,S.g,mem),nm=geoName(scope);
   let n50=0;mem.forEach(c=>{const p=D.P[pI(S.g,c)],e=D.E[eI(S.hz,S.g,c)];if(p&&e!=null&&100*e/p>=50)n50++;});
   let tiles=[{k:"People exposed",v:fN(a&&a.e),s:`${D.groups[S.g]}, ${nm}`},{k:"% of group exposed",v:fP(a&&a.r),s:`of ${fN(a&&a.p)} people`},{k:"Areas at ≥ 50%",v:n50,s:`of ${mem.length} countries and areas`}];
   if(S.measure==="ssp"){const sr=sspSeries(S.mapSsp,S.hz,mem);const ch=sr.e[Y2025]>0?100*(sr.e[S.mapYear]-sr.e[Y2025])/sr.e[Y2025]:null;
@@ -736,7 +750,6 @@ function initControls(){
   const geos=[{v:"world",n:"World"}].concat(GROUPINGS.map(g=>({group:g.n,items:groupValues(g.k).map(v=>({v:`g|${g.k}|${v}`,n:v}))})),
     [{group:"Countries and areas",items:ALL.slice().sort((a,b)=>D.countries[a].n.localeCompare(D.countries[b].n)).map(c=>({v:"c|"+c,n:D.countries[c].n}))}]);
   opt($("#selGeo"),geos,S.geo);
-  opt($("#selZoom"),[{v:"world",n:"World"}].concat(groupValues("r").filter(r=>r!==GBY.r.na).map(r=>({v:`g|r|${r}`,n:r}))),"world");
   opt($("#selMapSsp"),D.ssp.map((s,i)=>({v:i,n:s})),S.mapSsp);opt($("#selSsp"),D.ssp.map((s,i)=>({v:i,n:s})),S.ssp);
   opt($("#selMapYear"),D.years.slice(1).map(y=>({v:D.years.indexOf(y),n:y})),S.mapYear);
   opt($("#selMapN"),D.nk.map(n=>({v:n,n:`${n}`})),S.mapN);
@@ -746,7 +759,6 @@ function initControls(){
   const on=(id,fn)=>$(id).addEventListener("change",e=>{fn(e.target.value);});
   on("#selHz",v=>{S.hz=+v;renderAll();});on("#selGrp",v=>{S.g=+v;renderAll();});on("#selGeo",v=>{S.geo=v;renderAll();});
   on("#selMeasure",v=>{S.measure=v;renderMap();});on("#selMapSsp",v=>{S.mapSsp=+v;renderMap();});on("#selMapYear",v=>{S.mapYear=+v;renderMap();});on("#selMapN",v=>{S.mapN=+v;renderMap();});
-  on("#selZoom",v=>{S.zoom=v;zoomToGeo(v);renderMapSide();});
   on("#selGrouping",v=>{S.grouping=v;renderTab();});on("#selCat",v=>{S.cat=v;renderTab();});on("#chkComp",v=>{S.comp=v;renderTab();});
   on("#selGroupingU",v=>{S.groupingU=v;renderTab();});on("#selSspMeasure",v=>{S.sspM=v;renderTab();});on("#selSsp",v=>{S.ssp=+v;renderTab();});on("#selOvN",v=>{S.ovN=v;renderTab();});
   $("#chkMinPop").addEventListener("change",e=>{S.minPop=e.target.checked;renderMapSide();});
