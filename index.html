@@ -59,6 +59,8 @@ section.view.on{display:block}
 @media (max-width:1000px){.grid2,.mapwrap{grid-template-columns:minmax(0,1fr)}}
 .viewctl{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:flex-end;margin-bottom:12px}
 .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:12px}
+#mapTiles{grid-template-columns:repeat(2,minmax(0,1fr))}
+@media (max-width:1000px) and (min-width:640px){#mapTiles{grid-template-columns:repeat(4,minmax(0,1fr))}}
 .tile{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
 .tile .k{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600}
 .tile .v{font-size:22px;font-weight:650;letter-spacing:-.01em;margin-top:2px;font-variant-numeric:tabular-nums}
@@ -565,10 +567,11 @@ function renderMap(){
 function renderMapSide(){
   const scope=MAP.scope||"world",mem=members(scope),a=agg(S.hz,S.g,mem),nm=geoName(scope);
   let n50=0;mem.forEach(c=>{const p=D.P[pI(S.g,c)],e=D.E[eI(S.hz,S.g,c)];if(p&&e!=null&&100*e/p>=50)n50++;});
-  let tiles=[{k:"People exposed",v:fN(a&&a.e),s:`${D.groups[S.g]}, ${nm}`},{k:"% of group exposed",v:fP(a&&a.r),s:`of ${fN(a&&a.p)} people`},{k:"Areas at ≥ 50%",v:n50,s:`of ${mem.length} countries and areas`}];
+  const popT={k:"Total population",v:fN(a&&a.p),s:`${D.groups[S.g]}, ${nm}, 2025`};
+  let tiles=[popT,{k:"People exposed",v:fN(a&&a.e),s:`${D.groups[S.g]}, ${nm}`},{k:"% of group exposed",v:fP(a&&a.r),s:`of ${fN(a&&a.p)} people`},{k:"Areas at ≥ 50%",v:n50,s:`of ${mem.length} countries and areas`}];
   if(S.measure==="ssp"){const sr=sspSeries(S.mapSsp,S.hz,mem);const ch=sr.e[Y2025]>0?100*(sr.e[S.mapYear]-sr.e[Y2025])/sr.e[Y2025]:null;
-    tiles=[{k:`Exposed ${D.years[S.mapYear]}`,v:fN(sr.e[S.mapYear]),s:`${D.ssp[S.mapSsp]}, ${nm}`},{k:"Change from 2025",v:fC(ch),s:`${fN(sr.e[S.mapYear]-sr.e[Y2025])} people`},tiles[0]];}
-  if(S.measure==="multi"){const m=mhAgg(S.g,mem);tiles=[{k:`≥ ${S.mapN} hazards`,v:fN(m&&m.n[S.mapN-1]),s:`${D.groups[S.g]}, ${nm}`},{k:"% of group",v:fP(m&&m.r[S.mapN-1]),s:`of ${fN(m&&m.p)} people`},{k:"≥ 1 hazard",v:fP(m&&m.r[0]),s:"% of group"}];}
+    tiles=[{k:`Total population ${D.years[S.mapYear]}`,v:fN(sr.p[S.mapYear]),s:`${D.ssp[S.mapSsp]}, ${nm}`},{k:`Exposed ${D.years[S.mapYear]}`,v:fN(sr.e[S.mapYear]),s:`${D.ssp[S.mapSsp]}, ${nm}`},{k:"Change from 2025",v:fC(ch),s:`${fN(sr.e[S.mapYear]-sr.e[Y2025])} people`},{k:"Exposed 2025",v:fN(sr.e[Y2025]),s:`${D.ssp[S.mapSsp]}, ${nm}`}];}
+  if(S.measure==="multi"){const m=mhAgg(S.g,mem);tiles=[{k:"Total population",v:fN(m&&m.p),s:`${D.groups[S.g]}, ${nm}, 2025`},{k:`≥ ${S.mapN} hazards`,v:fN(m&&m.n[S.mapN-1]),s:`${D.groups[S.g]}, ${nm}`},{k:"% of group",v:fP(m&&m.r[S.mapN-1]),s:`of ${fN(m&&m.p)} people`},{k:"≥ 1 hazard",v:fP(m&&m.r[0]),s:"% of group"}];}
   $("#mapTiles").innerHTML=tiles.map(t=>`<div class="tile"><div class="k">${esc(t.k)}</div><div class="v">${esc(t.v)}</div><div class="s">${esc(t.s)}</div></div>`).join("");
   let rows=mem.filter(c=>!naStatus(c)).map(c=>({c,v:mapValue(c)})).filter(r=>typeof r.v==="number");
   if(S.minPop)rows=rows.filter(r=>(D.P[pI(S.measure==="ssp"?0:S.g,r.c)]||0)>=1e5);
