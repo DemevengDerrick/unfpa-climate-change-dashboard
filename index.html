@@ -46,6 +46,13 @@ nav.tabs{display:flex;gap:2px;overflow-x:auto;scrollbar-width:thin;margin:0 -4px
 nav.tabs button{font:inherit;font-size:13.5px;background:none;border:0;border-bottom:2.5px solid transparent;color:var(--muted);padding:8px 11px;cursor:pointer;white-space:nowrap}
 nav.tabs button[aria-selected=true]{color:var(--ink);border-bottom-color:var(--accent);font-weight:600}
 nav.tabs button:hover{color:var(--ink)}
+nav.tabs button.hidden{display:none}
+nav.secs{display:flex;gap:8px;overflow-x:auto;scrollbar-width:thin;margin:12px 0 2px;padding-bottom:2px}
+nav.secs button{font:inherit;font-size:14px;font-weight:620;text-align:left;background:var(--chip);border:1px solid var(--line);color:var(--ink);border-radius:10px;padding:7px 14px 6px;cursor:pointer;white-space:nowrap;line-height:1.25}
+nav.secs button small{display:block;font-size:11.5px;font-weight:500;color:var(--muted)}
+nav.secs button:hover{border-color:var(--muted)}
+nav.secs button[aria-selected=true]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+nav.secs button[aria-selected=true] small{color:var(--accent-ink);opacity:.85}
 .iconbtn{font:inherit;font-size:12.5px;background:var(--chip);border:1px solid var(--line);color:var(--ink2);border-radius:7px;padding:5px 9px;cursor:pointer}
 .iconbtn:hover{border-color:var(--muted)}
 main{padding:18px 20px 40px;max-width:1500px;margin:0 auto}
@@ -154,43 +161,36 @@ table.dt tr:hover td{background:var(--hit)}
     </div>
     <button class="iconbtn" id="themeBtn" title="Switch colour theme">Theme: auto</button>
   </div>
+  <nav class="secs" role="tablist" id="secs" aria-label="Topics">
+    <button data-sec="groups" aria-selected="true">Population groups<small id="secSubGroups">2025</small></button>
+    <button data-sec="preg">Pregnant women<small id="secSubPreg">2020</small></button>
+    <button data-sec="ssp">Futures (SSP)<small>Total population, 2025–2100</small></button>
+    <button data-sec="data">Data &amp; notes<small>Tables, downloads, metadata</small></button>
+  </nav>
   <div class="controls">
-    <div class="ctl wide"><label for="selHz">Hazard</label><select id="selHz"></select></div>
-    <div class="ctl"><label for="selGrp">Population group</label><select id="selGrp"></select></div>
-    <div class="ctl wide"><label for="selGeo">Geography (map and all tabs)</label><select id="selGeo"></select></div>
+    <div class="ctl wide" id="ctlHz"><label for="selHz">Hazard</label><select id="selHz"></select></div>
+    <div class="ctl" id="ctlGrp"><label for="selGrp">Population group</label><select id="selGrp"></select></div>
+    <div class="ctl wide" id="ctlGeo"><label for="selGeo">Geography (map and all views)</label><select id="selGeo"></select></div>
   </div>
   <nav class="tabs" role="tablist" id="tabs">
-    <button data-tab="map" aria-selected="true">Map</button>
-    <button data-tab="groups">Compare groups</button>
-    <button data-tab="profile">Profile</button>
-    <button data-tab="demo">Demographic groups</button>
-    <button data-tab="preg">Pregnant women (2020)</button>
-    <button data-tab="urban">Urban &amp; rural</button>
-    <button data-tab="ssp">Futures (SSP)</button>
-    <button data-tab="multi">Multi-hazard</button>
-    <button data-tab="data">Data &amp; notes</button>
+    <button data-tab="ssp" data-secs="ssp">Trends</button>
+    <button data-tab="map" data-secs="groups preg ssp" aria-selected="true">Map</button>
+    <button data-tab="groups" data-secs="groups preg">Compare country groups</button>
+    <button data-tab="profile" data-secs="groups preg">Profile</button>
+    <button data-tab="demo" data-secs="groups">Demographic groups</button>
+    <button data-tab="urban" data-secs="groups preg">Urban &amp; rural</button>
+    <button data-tab="multi" data-secs="groups preg">Multi-hazard</button>
+    <button data-tab="data" data-secs="data">Data table</button>
+    <button data-tab="notes" data-secs="data">Notes &amp; metadata</button>
   </nav>
 </header>
 <main>
 <div id="loading">Loading the database…</div>
+<div class="note" id="secNote" style="display:none"></div>
 
 <section class="view" id="v-map">
   <div class="viewctl">
-    <div class="ctl"><label for="selMeasure">Map shows</label>
-      <select id="selMeasure">
-        <optgroup label="Population groups (2025)">
-        <option value="pct">% of group exposed (2025)</option>
-        <option value="num">People exposed (2025)</option>
-        <option value="rural">Rural share of exposed people (2025)</option>
-        <option value="ssp">% change in people exposed (SSP)</option>
-        <option value="multi">% exposed to at least N hazards</option>
-        </optgroup>
-        <optgroup label="Pregnant women (WorldPop 2020)">
-        <option value="ppct">% of pregnant women exposed (2020)</option>
-        <option value="pnum">Pregnant women exposed (2020)</option>
-        <option value="pmulti">% of pregnant women exposed to at least N hazards (2020)</option>
-        </optgroup>
-      </select></div>
+    <div class="ctl" id="ctlMeasure"><label for="selMeasure">Map shows</label><select id="selMeasure"></select></div>
     <div class="ctl" data-for="ssp"><label for="selMapSsp">Scenario</label><select id="selMapSsp"></select></div>
     <div class="ctl" data-for="ssp"><label for="selMapYear">2025 to</label><select id="selMapYear"></select></div>
     <div class="ctl" data-for="multi pmulti"><label for="selMapN">At least N hazards</label><select id="selMapN"></select></div>
@@ -222,7 +222,7 @@ table.dt tr:hover td{background:var(--hit)}
   </div>
   <div class="card">
     <h2 id="hmTitle">Share of each group's population exposed, by hazard</h2>
-    <p class="desc">Population-weighted: total people exposed in the group divided by its total population. Click a hazard to select it, or a group to open its profile.</p>
+    <p class="desc" id="hmDesc"></p>
     <div class="chartbox" id="hmChart"></div>
     <div class="legend" id="hmLegend"></div>
   </div>
@@ -242,7 +242,7 @@ table.dt tr:hover td{background:var(--hit)}
   </div>
   <div class="card">
     <h2 id="pfHzTitle"></h2>
-    <p class="desc">Bars are coloured by hazard category. The black tick is the world value. Click a bar to select that hazard.</p>
+    <p class="desc" id="pfDesc"></p>
     <div class="legend" id="pfLegend"></div>
     <div class="chartbox" id="pfChart"></div>
   </div>
@@ -255,37 +255,6 @@ table.dt tr:hover td{background:var(--hit)}
     <div class="card"><h2 id="dmNumTitle"></h2><p class="desc">Number of people in each group exposed to the selected hazard.</p><div class="chartbox" id="dmNumChart"></div></div>
   </div>
   <div class="card"><h2 id="dmHmTitle"></h2><p class="desc">% of each demographic group exposed, for every hazard. Click a hazard to select it.</p><div class="chartbox" id="dmHm"></div><div class="legend" id="dmHmLegend"></div></div>
-</section>
-
-<section class="view" id="v-preg">
-  <div class="note" id="pgNote"></div>
-  <div class="card">
-    <h2 id="pgTitle"></h2>
-    <div class="chips" id="pgChips"></div>
-    <div class="tiles" id="pgTiles"></div>
-    <button class="iconbtn" id="pgMapBtn">Show pregnant women on the map</button>
-  </div>
-  <div class="card"><h2 id="pgHzTitle"></h2>
-    <p class="desc">Bars: % of pregnant women exposed (2020), coloured by hazard category. Black tick: % of women 15–49 exposed (2025) in the same countries, for context only: different year and population grid. Click a bar to select that hazard.</p>
-    <div class="legend" id="pgLegend"></div><div class="chartbox" id="pgChart"></div></div>
-  <div class="card"><h2 id="pgHmTitle"></h2>
-    <div class="viewctl" style="margin-top:6px"><div class="ctl"><label for="selGroupingP">Compare by</label><select id="selGroupingP"></select></div></div>
-    <p class="desc">Population-weighted over the countries with pregnancy data. Brackets: countries with data / all countries in the group. Click a hazard to select it, or a group to make it the geography.</p>
-    <div class="chartbox" id="pgHm"></div><div class="legend" id="pgHmLegend"></div></div>
-  <div class="grid2">
-    <div class="card"><h2 id="pgMhTitle"></h2><p class="desc">From Multi_Hazard_Exposure_pregnant (the same 8 climate layers as the Multi-hazard tab). The black tick is the world value.</p><div class="chartbox" id="pgMhChart"></div></div>
-    <div class="card"><h2 id="pgUrTitle"></h2><p class="desc">Share of exposed pregnant women living in each settlement class (GHS-DUG Level 1). This shows where they live, not exposure rates.</p><div class="legend" id="pgUrLegend"></div><div class="chartbox" id="pgUrChart"></div></div>
-  </div>
-  <div class="card"><h2 id="pgCbTitle"></h2><p class="desc">The most common combinations of the 8 climate layers (Overlapping_Hazards_8Layer_preg). Squares show which layers are in each combination.</p><div class="legend" id="pgCbKey"></div><div class="chartbox" id="pgCbChart"></div></div>
-  <div class="card">
-    <h2 id="pgDtTitle"></h2>
-    <div class="viewctl" style="margin-top:8px">
-      <div class="ctl"><label for="pgSearch">Filter</label><input type="search" id="pgSearch" placeholder="Country, region, income group…"></div>
-      <button class="iconbtn" id="pgDl">Download this table (CSV)</button>
-      <button class="iconbtn" id="pgDlAll">Download all hazards for pregnant women (CSV)</button>
-    </div>
-    <div class="tablewrap" id="pgTable"></div>
-  </div>
 </section>
 
 <section class="view" id="v-urban">
@@ -313,8 +282,8 @@ table.dt tr:hover td{background:var(--hit)}
 <section class="view" id="v-multi">
   <div class="viewctl"><div class="ctl"><label for="selOvN">Combinations with</label><select id="selOvN"></select></div></div>
   <div class="grid2">
-    <div class="card"><h2 id="mhTitle"></h2><p class="desc">From the Multi_Hazard_Exposure sheet, which counts the same 8 climate layers as the combinations below. The black tick is the world value.</p><div class="chartbox" id="mhChart"></div></div>
-    <div class="card"><h2 id="exTitle"></h2><p class="desc">From the Overlapping_Hazards_8Layer sheet (8 climate layers): people exposed to exactly N of the 8.</p><div class="chartbox" id="exChart"></div></div>
+    <div class="card"><h2 id="mhTitle"></h2><p class="desc" id="mhDesc"></p><div class="chartbox" id="mhChart"></div></div>
+    <div class="card"><h2 id="exTitle"></h2><p class="desc" id="exDesc"></p><div class="chartbox" id="exChart"></div></div>
   </div>
   <div class="grid2">
     <div class="card"><h2 id="coTitle"></h2><p class="desc">% of the group exposed to both hazards (8-layer sheet). The diagonal shows exposure to each hazard on its own or with others.</p><div class="chartbox" id="coChart"></div><div class="legend" id="coLegend"></div></div>
@@ -326,12 +295,15 @@ table.dt tr:hover td{background:var(--hit)}
   <div class="card">
     <h2 id="dtTitle"></h2>
     <div class="viewctl" style="margin-top:8px">
+      <div class="ctl"><label for="selDataset">Dataset</label><select id="selDataset"><option value="groups">Population groups (2025)</option><option value="preg">Pregnant women (2020)</option></select></div>
       <div class="ctl"><label for="dtSearch">Filter</label><input type="search" id="dtSearch" placeholder="Country, region, income group…"></div>
       <button class="iconbtn" id="dlTable">Download this table (CSV)</button>
-      <button class="iconbtn" id="dlAll">Download all hazards for this group (CSV)</button>
+      <button class="iconbtn" id="dlAll">Download all hazards (CSV)</button>
     </div>
     <div class="tablewrap" id="dtTable"></div>
   </div>
+</section>
+<section class="view" id="v-notes">
   <div class="card prose" id="notes"></div>
   <div class="card"><h2>Hazard taxonomy</h2><div class="tablewrap" id="taxTable"></div></div>
   <div class="card"><h2>Hazard metadata (Metadata sheet)</h2><div class="tablewrap" id="metaTable"></div></div>
@@ -368,9 +340,13 @@ const DISCLAIMER="The boundaries and names shown and the designations used on th
 
 let D,NC,NH,NG,NS,NY,NK,ALL,CIDX={},HIDX={},GVALS={},Y2025=0,GW=0;
 const S={tab:"map",hz:0,g:0,geo:"world",measure:"pct",mapSsp:1,mapYear:0,mapN:3,grouping:"r",cat:"all",comp:"1",groupingU:"r",sspM:"e",ssp:1,ovN:"all",sortCol:"r",sortDir:-1,search:"",minPop:true,
-  groupingP:"r",pgSort:"r",pgDir:-1,pgSearch:""};
+  sec:"groups",sub:{groups:"map",preg:"map",ssp:"ssp",data:"data"},meas:{groups:"pct",preg:"ppct",ssp:"ssp"},dataset:"groups",pgSort:"r",pgDir:-1};
 /* map measures drawn from the pregnant-women sheets (WorldPop 2020, 1 km) */
-const PM=new Set(["ppct","pnum","pmulti"]);
+const PM=new Set(["ppct","pnum","prural","pmulti"]);
+/* map measures offered in each section */
+const MEAS={groups:[["pct","% of group exposed"],["num","People exposed"],["rural","Rural share of exposed people"],["multi","% exposed to at least N hazards"]],
+  preg:[["ppct","% of pregnant women exposed"],["pnum","Pregnant women exposed"],["prural","Rural share of exposed pregnant women"],["pmulti","% exposed to at least N hazards"]],
+  ssp:[["ssp","% change in people exposed"]]};
 
 /* ---------- helpers ---------- */
 const $=s=>document.querySelector(s);
@@ -430,6 +406,15 @@ function pMh(mem){let p=0,any=false;for(const c of mem){const q=D.preg.MHP[c];if
   const out=[];for(let k=0;k<NK;k++){let s=0;for(const c of mem){const v=D.preg.MH[k*NC+c];if(v!=null)s+=v;}out.push(s);}return any?{n:out,p,r:out.map(v=>p>0?100*v/p:null)}:null;}
 function pOv(mem){const set=new Set(mem),out=new Map();let tp=0;for(const c of mem){const q=D.preg.OVP[c];if(q!=null)tp+=q;}
   const O=D.preg.OV;for(let i=0;i<O.length;i+=3){if(!set.has(O[i]))continue;out.set(O[i+1],(out.get(O[i+1])||0)+O[i+2]);}return{m:out,tp};}
+/* the population-groups and pregnant-women sections share their views: these read from the active one */
+const isPreg=()=>S.sec==="preg";
+const popLabel=()=>isPreg()?"Pregnant women":D.groups[S.g];
+const popYear=()=>isPreg()?D.preg.year:2025;
+function A(h,mem){return isPreg()?pAgg(h,mem):agg(h,S.g,mem);}
+function AMh(mem){return isPreg()?pMh(mem):mhAgg(S.g,mem);}
+function ADeg(h,mem){return isPreg()?pDeg(h,mem):degAgg(h,S.g,mem);}
+function AOv(mem){return isPreg()?pOv(mem):ovAgg(S.g,mem);}
+function APop(mem){return isPreg()?mem.reduce((t,c)=>t+(D.preg.P[c]||0),0):popAgg(S.g,mem);}
 const popcount=s=>{let n=0;while(s){n+=s&1;s>>=1;}return n;};
 
 /* ---------- generic charts ---------- */
@@ -579,14 +564,16 @@ function mapValue(c){const h=S.hz,g=S.g;
     case"multi":{const v=D.MH[mhI(S.mapN-1,g,c)],p=D.MHP[pI(g,c)];return v==null||!p?null:100*v/p;}
     case"ppct":{if(!D.preg.cov[c])return"nocov";const e=D.preg.E[h*NC+c],p=D.preg.P[c];return e==null||!p?null:100*e/p;}
     case"pnum":return D.preg.cov[c]?D.preg.E[h*NC+c]:"nocov";
+    case"prural":{if(!D.preg.cov[c])return"nocov";const i=h*NC+c;if(D.preg.DU[i]==null)return null;const t=D.preg.DU[i]+(D.preg.DC[i]||0)+(D.preg.DR[i]||0);return t>0?100*(D.preg.DR[i]||0)/t:"none";}
     case"pmulti":{if(!D.preg.cov[c])return"nocov";const v=D.preg.MH[(S.mapN-1)*NC+c],p=D.preg.MHP[c];return v==null||!p?null:100*v/p;}}}
 const isMulti=()=>S.measure==="multi"||S.measure==="pmulti";
 function naStatus(c){const d=D.countries[c];if(d.ds)return"disputed";if(d.ll&&D.hazards[S.hz].k==="coastal_flood_100yr"&&!isMulti())return"landlocked";return null;}
 function mapColor(v){if(v==null||v==="nocov")return"var(--nodata)";if(v==="disputed")return"url(#hatch)";if(v==="landlocked")return"var(--na)";if(v==="none")return S.measure==="ssp"?"#f7f7f7":"var(--grid)";
-  switch(S.measure){case"pct":case"multi":case"ppct":case"pmulti":return SEQ[cls(v,SEQ_BRK)];case"num":case"pnum":return BLU[cls(v,NUM_BRK)];case"rural":return GRN[cls(v,RUR_BRK)];case"ssp":return DIV[cls(v,DIV_BRK)];}}
-function fmtMap(v){if(v==null)return"no data";if(v==="nocov")return"no pregnancy data";if(v==="disputed")return"disputed territory (not mapped)";if(v==="landlocked")return"landlocked: not applicable";if(v==="none")return"no one exposed in 2025";switch(S.measure){case"pct":case"multi":case"rural":case"ppct":case"pmulti":return fP(v);case"num":case"pnum":return fN(v);case"ssp":return fC(v);}}
+  switch(S.measure){case"pct":case"multi":case"ppct":case"pmulti":return SEQ[cls(v,SEQ_BRK)];case"num":case"pnum":return BLU[cls(v,NUM_BRK)];case"rural":case"prural":return GRN[cls(v,RUR_BRK)];case"ssp":return DIV[cls(v,DIV_BRK)];}}
+function fmtMap(v){if(v==null)return"no data";if(v==="nocov")return"no pregnancy data";if(v==="disputed")return"disputed territory (not mapped)";if(v==="landlocked")return"landlocked: not applicable";if(v==="none")return`no one exposed in ${PM.has(S.measure)?D.preg.year:2025}`;switch(S.measure){case"pct":case"multi":case"rural":case"ppct":case"pmulti":case"prural":return fP(v);case"num":case"pnum":return fN(v);case"ssp":return fC(v);}}
 function measureName(){const g=D.groups[S.g],hz=hzLabel(S.hz);switch(S.measure){
   case"ppct":return`Pregnant women exposed to ${hz}: % of pregnant women, 2020`;case"pnum":return`Pregnant women exposed to ${hz}: number, 2020`;
+  case"prural":return`Pregnant women exposed to ${hz}: % living in rural areas, 2020`;
   case"pmulti":return`Pregnant women exposed to at least ${S.mapN} hazards at once: % of pregnant women, 2020`;
   case"pct":return`${g} exposed to ${hz}: % of group, 2025`;case"num":return`${g} exposed to ${hz}: number of people, 2025`;
   case"rural":return`${g} exposed to ${hz}: % living in rural areas, 2025`;
@@ -610,7 +597,7 @@ function renderMap(){
   const sel=S.geo.startsWith("c|")?D.countries[+S.geo.split("|")[1]].pd:null;if(sel)MAP.sel.setAttribute("d",sel);else MAP.sel.removeAttribute("d");
   $("#mapTitle").textContent=measureName()+(filt?` (${geoName(sc)})`:"");
   let items;switch(S.measure){case"pct":case"multi":case"ppct":case"pmulti":items=SEQ.map((c,i)=>({color:c,label:SEQ_LAB[i]}));break;case"num":case"pnum":items=BLU.map((c,i)=>({color:c,label:NUM_LAB[i]}));break;
-    case"rural":items=GRN.map((c,i)=>({color:c,label:RUR_LAB[i]})).concat([{color:"var(--grid)",label:"No one exposed"}]);break;case"ssp":items=DIV.map((c,i)=>({color:c,label:DIV_LAB[i]}));break;}
+    case"rural":case"prural":items=GRN.map((c,i)=>({color:c,label:RUR_LAB[i]})).concat([{color:"var(--grid)",label:"No one exposed"}]);break;case"ssp":items=DIV.map((c,i)=>({color:c,label:DIV_LAB[i]}));break;}
   items=items.concat([{color:"var(--nodata)",label:PM.has(S.measure)?"No pregnancy data":"No data"},{hatch:true,label:"Disputed territory"}]);
   if(D.hazards[S.hz].k==="coastal_flood_100yr"&&!isMulti())items.push({color:"var(--na)",label:"Landlocked (no coast)"});
   if(filt)items.push({color:"var(--off)",label:"Outside "+geoName(sc)});
@@ -618,7 +605,7 @@ function renderMap(){
   document.querySelectorAll("#v-map [data-for]").forEach(e=>e.style.display=e.dataset.for.split(" ").includes(S.measure)?"":"none");
   $("#minPopLbl").textContent=PM.has(S.measure)?"Hide areas with fewer than 10,000 pregnant women":"Hide areas with fewer than 100,000 people in the group";
   const note=$("#mapNote");
-  if(PM.has(S.measure)){note.style.display="";note.textContent=`Pregnant women come from the WorldPop 2020 pregnancy estimates (1 km), a separate layer from the 2025 population groups, so the population group selection is ignored${S.measure==="pmulti"?", as is the hazard selection":""}. Grey areas are outside those estimates: ${pCount(ALL)} countries and areas have data.`;}
+  if(PM.has(S.measure)){note.style.display="";note.textContent=`Grey areas are outside the WorldPop 2020 pregnancy estimates: ${pCount(ALL)} countries and areas have data.${S.measure==="pmulti"?" Multi-hazard counts come from Multi_Hazard_Exposure_pregnant, so the hazard selection is ignored.":""}${S.measure==="prural"?" This is the share of exposed pregnant women living in rural areas, not a rural exposure rate.":""}`;}
   else if(S.measure==="ssp"){note.style.display="";note.textContent="SSP projections cover the total population only, so the population group is ignored. Hazard footprints are fixed at 2025: the change comes from population only.";}
   else if(S.measure==="multi"){note.style.display="";note.textContent="Multi-hazard counts come from the Multi_Hazard_Exposure sheet, so the hazard selection is ignored.";}
   else if(S.measure==="rural"){note.style.display="";note.textContent="The Degurba sheet has no population per settlement class: this is the share of exposed people living in rural areas, not a rural exposure rate.";}
@@ -652,17 +639,20 @@ function hazCols(onlyIdx){let hs=[...Array(NH).keys()];if(S.cat!=="all")hs=hs.fi
 function setHz(h){S.hz=h;$("#selHz").value=h;renderAll();}
 function setGeo(g){S.geo=g;$("#selGeo").value=g;renderAll();}
 function renderGroups(){
-  const k=S.grouping,vals=groupValues(k),hs=hazCols();
-  const rows=[{label:"World",geo:"world"}].concat(vals.map(v=>({label:v,geo:`g|${k}|${v}`})));
-  const A=rows.map(r=>{const m=members(r.geo);r.n=m.length;return hs.map(h=>agg(h,S.g,m));});
-  $("#hmTitle").textContent=`${D.groups[S.g]}: % exposed by ${GBY[k].n} and hazard`;
-  heatmap($("#hmChart"),rows.map(r=>({label:`${r.label} (${r.n})`,hl:S.geo===r.geo,onClick:()=>{setGeo(r.geo);switchTab("profile");}})),
+  const k=S.grouping,vals=groupValues(k),hs=hazCols(),P=isPreg(),lab=popLabel();
+  let rows=[{label:"World",geo:"world"}].concat(vals.map(v=>({label:v,geo:`g|${k}|${v}`})));
+  rows.forEach(r=>{const m=members(r.geo);r.n=m.length;r.nc=P?pCount(m):r.n;r.A=hs.map(h=>A(h,m));});
+  if(P)rows=rows.filter(r=>r.nc>0);
+  const rl=r=>P?`${r.label} (${r.nc}/${r.n})`:`${r.label} (${r.n})`;
+  $("#hmTitle").textContent=`${lab}: % exposed by ${GBY[k].n} and hazard, ${popYear()}`;
+  $("#hmDesc").textContent="Population-weighted: total people exposed in the group divided by its total population. "+(P?"Only countries with pregnancy data count; brackets show countries with data / all countries in the group. ":"")+"Click a hazard to select it, or a group to open its profile.";
+  heatmap($("#hmChart"),rows.map(r=>({label:rl(r),hl:S.geo===r.geo,onClick:()=>{setGeo(r.geo);switchTab("profile");}})),
     hs.map(h=>({label:hzLabel(h),hl:h===S.hz,onClick:()=>setHz(h),tip:()=>`<b>${esc(hzLabel(h))}</b><div class="m">${D.hazards[h].cat}${D.hazards[h].composite?", composite":""}</div>`})),
-    (i,j)=>{const a=A[i][j];return seqCell(a&&a.r,()=>`<b>${esc(rows[i].label)}</b><div class="m">${esc(hzLabel(hs[j]))}</div>${tr("% exposed",fP(a&&a.r))}${tr("People exposed",fN(a&&a.e))}${tr("Group population",fN(a&&a.p))}`,()=>setHz(hs[j]));},{labelW:220});
+    (i,j)=>{const a=rows[i].A[j];return seqCell(a&&a.r,()=>`<b>${esc(rows[i].label)}</b><div class="m">${esc(hzLabel(hs[j]))}</div>${tr("% exposed",fP(a&&a.r))}${tr("People exposed",fN(a&&a.e))}${tr(P?"Pregnant women":"Group population",fN(a&&a.p))}${P?tr("Countries with data",`${rows[i].nc} of ${rows[i].n}`):""}`,()=>setHz(hs[j]));},{labelW:P?240:220});
   legend($("#hmLegend"),SEQ.map((c,i)=>({color:c,label:SEQ_LAB[i]})).concat([{color:"var(--nodata)",label:"No data"}]));
-  const w=agg(S.hz,S.g,ALL);
-  $("#gbTitle").textContent=`${hzLabel(S.hz)}: % of ${D.groups[S.g].toLowerCase()} exposed`;
-  const gr=rows.slice(1).map(r=>({r,a:agg(S.hz,S.g,members(r.geo))}));
+  const w=A(S.hz,ALL);
+  $("#gbTitle").textContent=`${hzLabel(S.hz)}: % of ${lab.toLowerCase()} exposed`;
+  const gr=rows.slice(1).map(r=>({r,a:A(S.hz,members(r.geo))}));
   hbar($("#gbChart"),gr.map(({r,a})=>({label:r.label,v:a&&a.r,ref:w&&w.r,color:a&&a.r!=null?SEQ[cls(a.r,SEQ_BRK)]:null,hl:S.geo===r.geo,
     tip:()=>`<b>${esc(r.label)}</b>${tr("% exposed",fP(a&&a.r))}${tr("People exposed",fN(a&&a.e))}${tr("World",fP(w&&w.r))}`,onClick:()=>setGeo(r.geo)})),{max:100,fmt:v=>fP(v),fmtAx:t=>t+"%"});
   const rei=gr.map(({r,a})=>{if(!a||!w||!w.e||!w.p)return null;const v=(a.e/w.e)/(a.p/w.p);return{r,a,v,se:100*a.e/w.e,sp:100*a.p/w.p};}).filter(Boolean);
@@ -671,31 +661,36 @@ function renderGroups(){
     {fmt:v=>(v+1).toFixed(2),fmtAx:t=>(t+1).toFixed(1)});
 }
 function renderProfile(){
-  const mem=members(S.geo),nm=geoName(S.geo),isC=S.geo.startsWith("c|");
+  const mem=members(S.geo),nm=geoName(S.geo),isC=S.geo.startsWith("c|"),P=isPreg(),lab=popLabel(),nCov=P?pCount(mem):mem.length;
   $("#pfTitle").textContent=isC?`${nm} (${D.countries[mem[0]].i||""})`:`${nm} (${mem.length} countries and areas)`;
-  if(isC){const c=mem[0];$("#pfChips").innerHTML=GROUPINGS.map(g=>`<span class="chip"><b>${esc(g.n)}</b>${esc(gval(c,g.k))}</span>`).join("")+`<span class="chip"><b>Code</b>${esc(D.countries[c].c)}</span>`+(D.countries[c].ds?`<span class="chip"><b>Status</b>Disputed territory (greyed on maps)</span>`:"")+(D.countries[c].ll?`<span class="chip"><b>Geography</b>Landlocked</span>`:"");}
-  else $("#pfChips").innerHTML=`<span class="chip"><b>Members</b>${esc(mem.slice(0,12).map(c=>D.countries[c].n).join(", "))}${mem.length>12?", …":""}</span>`;
-  const vals=[...Array(NH).keys()].map(h=>({h,a:agg(h,S.g,mem),w:agg(h,S.g,ALL)}));
+  let chips;
+  if(isC){const c=mem[0];chips=GROUPINGS.map(g=>`<span class="chip"><b>${esc(g.n)}</b>${esc(gval(c,g.k))}</span>`).join("")+`<span class="chip"><b>Code</b>${esc(D.countries[c].c)}</span>`+(D.countries[c].ds?`<span class="chip"><b>Status</b>Disputed territory (greyed on maps)</span>`:"")+(D.countries[c].ll?`<span class="chip"><b>Geography</b>Landlocked</span>`:"");
+    if(P&&!nCov)chips=`<span class="chip"><b>Coverage</b>No pregnancy data for this country or area</span>`+chips;}
+  else{chips=`<span class="chip"><b>Members</b>${esc(mem.slice(0,12).map(c=>D.countries[c].n).join(", "))}${mem.length>12?", …":""}</span>`;
+    if(P){const miss=mem.filter(c=>!D.preg.cov[c]&&!D.countries[c].ds);chips=`<span class="chip"><b>With pregnancy data</b>${nCov} of ${mem.length}</span>`+(S.geo!=="world"&&miss.length&&nCov?`<span class="chip"><b>Without data</b>${esc(miss.slice(0,10).map(c=>D.countries[c].n).join(", "))}${miss.length>10?`, … (${miss.length})`:""}</span>`:"")+chips;}}
+  $("#pfChips").innerHTML=chips;
+  const vals=[...Array(NH).keys()].map(h=>({h,a:A(h,mem),w:A(h,ALL),f:P?pWra(h,mem):null}));
   const base=vals.filter(x=>x.a&&x.a.r!=null&&!D.hazards[x.h].composite);
   const n25=base.filter(x=>x.a.r>=25).length,top=base.slice().sort((a,b)=>b.a.r-a.a.r)[0];
   const lift=base.filter(x=>x.a.r>=10&&x.w&&x.w.r>0).map(x=>({h:x.h,l:x.a.r/x.w.r})).sort((a,b)=>b.l-a.l)[0];
-  const m=mhAgg(S.g,mem),pop=popAgg(S.g,mem);
-  const sr=sspSeries(1,S.hz,mem);
-  const tiles=[{k:D.groups[S.g],v:fN(pop),s:"people, 2025"},
-    {k:"Hazards affecting ≥ 25%",v:n25,s:`of ${base.length} single hazards`},
+  const m=AMh(mem),pop=P&&!nCov?null:APop(mem);
+  const tiles=[{k:lab,v:fN(pop),s:P?`${nCov?"":"no data, "}2020`:"people, 2025"},
+    {k:"Hazards affecting ≥ 25%",v:base.length?n25:"–",s:`of ${base.length} single hazards`},
     {k:"Highest exposure",v:top?fP(top.a.r):"–",s:top?hzLabel(top.h):""},
-    {k:"Most above world rate",v:lift&&!S.geo.startsWith("world")&&S.geo!=="world"?"×"+lift.l.toFixed(1):"–",s:lift&&S.geo!=="world"?hzLabel(lift.h):"compared with the world rate"},
-    {k:"≥ 3 hazards at once",v:fP(m&&m.r[2]),s:m?`${fN(m.n[2])} people`:"no data"},
-    {k:`${hzLabel(S.hz)}, SSP2 2100`,v:fN(sr.e[NY-1]),s:sr.e[0]>0?`${fC(100*(sr.e[NY-1]-sr.e[0])/sr.e[0])} vs 2025 (total pop.)`:"no exposure in 2025"}];
-  const pa=pAgg(S.hz,mem);
-  tiles.push({k:`Pregnant women, ${hzLabel(S.hz)}`,v:pa?fP(pa.r):"no data",s:pa?`${fN(pa.e)} of ${fN(pa.p)} exposed, 2020`:"outside the 2020 pregnancy estimates"});
+    {k:"Most above world rate",v:lift&&S.geo!=="world"?"×"+lift.l.toFixed(1):"–",s:lift&&S.geo!=="world"?hzLabel(lift.h):"compared with the world rate"},
+    {k:"≥ 3 hazards at once",v:fP(m&&m.r[2]),s:m?`${fN(m.n[2])} ${P?"pregnant women":"people"}`:"no data"}];
+  if(P){const a=A(S.hz,mem),f=pWra(S.hz,mem);tiles.push({k:hzLabel(S.hz),v:fP(a&&a.r),s:f?`women 15–49 (2025, same countries): ${fP(f.r)}`:"no data"});}
+  else{const sr=sspSeries(1,S.hz,mem);tiles.push({k:`${hzLabel(S.hz)}, SSP2 2100`,v:fN(sr.e[NY-1]),s:sr.e[0]>0?`${fC(100*(sr.e[NY-1]-sr.e[0])/sr.e[0])} vs 2025 (total pop.)`:"no exposure in 2025"});}
   $("#pfTiles").innerHTML=tiles.map(t=>`<div class="tile"><div class="k">${esc(t.k)}</div><div class="v">${esc(t.v)}</div><div class="s">${esc(t.s)}</div></div>`).join("");
-  $("#pfHzTitle").textContent=`${D.groups[S.g]}: % exposed to each hazard, ${nm}`;
-  legend($("#pfLegend"),HZCATS.map((c,i)=>({color:CAT[i],label:c})).concat([{tick:true,label:"World"}]));
+  $("#pfHzTitle").textContent=`${lab}: % exposed to each hazard, ${nm}, ${popYear()}`;
+  $("#pfDesc").textContent=P?"Bars are coloured by hazard category. The black tick is the % of women 15–49 exposed in 2025 in the same countries, for context only (different year and population grid). Click a bar to select that hazard."
+    :"Bars are coloured by hazard category. The black tick is the world value. Click a bar to select that hazard.";
+  legend($("#pfLegend"),HZCATS.map((c,i)=>({color:CAT[i],label:c})).concat([{tick:true,label:P?"Women 15–49, 2025 (same countries)":"World"}]));
   const rows=vals.filter(x=>S.comp!=="0"||!D.hazards[x.h].composite||x.h===S.hz).sort((a,b)=>((b.a&&b.a.r)||0)-((a.a&&a.a.r)||0));
   const llc=isC&&D.countries[mem[0]].ll,isNA=h=>llc&&D.hazards[h].k==="coastal_flood_100yr";
-  hbar($("#pfChart"),rows.map(x=>({label:hzLabel(x.h),v:isNA(x.h)?null:x.a&&x.a.r,na:isNA(x.h)?"n/a (landlocked)":null,ref:S.geo==="world"?null:x.w&&x.w.r,color:CAT[HZCATS.indexOf(D.hazards[x.h].cat)],hl:x.h===S.hz,
-    tip:()=>`<b>${esc(hzLabel(x.h))}</b><div class="m">${D.hazards[x.h].cat}${D.hazards[x.h].composite?", composite":""}</div>${tr("% exposed",fP(x.a&&x.a.r))}${tr("People exposed",fN(x.a&&x.a.e))}${tr("World",fP(x.w&&x.w.r))}`,
+  if(P&&!nCov){$("#pfChart").innerHTML='<p class="empty">No pregnancy data for this selection.</p>';return;}
+  hbar($("#pfChart"),rows.map(x=>({label:hzLabel(x.h),v:isNA(x.h)?null:x.a&&x.a.r,na:isNA(x.h)?"n/a (landlocked)":null,ref:P?x.f&&x.f.r:S.geo==="world"?null:x.w&&x.w.r,color:CAT[HZCATS.indexOf(D.hazards[x.h].cat)],hl:x.h===S.hz,
+    tip:()=>`<b>${esc(hzLabel(x.h))}</b><div class="m">${D.hazards[x.h].cat}${D.hazards[x.h].composite?", composite":""}</div>${tr("% exposed",fP(x.a&&x.a.r))}${tr("People exposed",fN(x.a&&x.a.e))}${tr("World",fP(x.w&&x.w.r))}${P?tr("Women 15–49, 2025",fP(x.f&&x.f.r)):""}`,
     onClick:()=>setHz(x.h)})),{max:100,fmt:v=>fP(v),fmtAx:t=>t+"%",labelW:300,rowH:22});
 }
 function renderDemo(){
@@ -714,79 +709,21 @@ function renderDemo(){
     (i,j)=>{const a=A[i][j];return seqCell(a&&a.r,()=>`<b>${esc(D.groups[i])}</b><div class="m">${esc(hzLabel(hs[j]))}</div>${tr("% exposed",fP(a&&a.r))}${tr("People exposed",fN(a&&a.e))}`,()=>setHz(hs[j]));},{labelW:170});
   legend($("#dmHmLegend"),SEQ.map((c,i)=>({color:c,label:SEQ_LAB[i]})));
 }
-function renderPreg(){
-  const mem=members(S.geo),nm=geoName(S.geo),isC=S.geo.startsWith("c|"),cov=mem.filter(c=>D.preg.cov[c]),h=S.hz;
-  $("#pgNote").innerHTML=`Pregnant women come from separate sheets built on WorldPop <b>2020</b> pregnancy estimates at <b>1 km</b>. The population groups in the rest of the dashboard use WorldPop <b>2025</b> at <b>100 m</b>, so pregnant women are shown here, not in the population group list, and the population group selector does not apply. The estimates cover ${pCount(ALL)} countries and areas (low- and middle-income countries). Everywhere else is shown as no data, not as zero.`;
-  $("#pgTitle").textContent=`Pregnant women (2020), ${nm}`;
-  const miss=mem.filter(c=>!D.preg.cov[c]&&!D.countries[c].ds);
-  $("#pgChips").innerHTML=isC?(cov.length?"":`<span class="chip"><b>Coverage</b>No pregnancy data for this country or area</span>`):
-    `<span class="chip"><b>With data</b>${cov.length} of ${mem.length} countries and areas</span>`+(S.geo!=="world"&&miss.length&&miss.length<mem.length?`<span class="chip"><b>Without data</b>${esc(miss.slice(0,10).map(c=>D.countries[c].n).join(", "))}${miss.length>10?`, … (${miss.length})`:""}</span>`:"");
-  const a=pAgg(h,mem),m=pMh(mem),wr=pWra(h,mem);
-  const base=[...Array(NH).keys()].filter(k=>!D.hazards[k].composite).map(k=>({k,a:pAgg(k,mem)})).filter(x=>x.a&&x.a.r!=null);
-  const top=base.slice().sort((x,y)=>y.a.r-x.a.r)[0];
-  const tiles=[{k:"Pregnant women",v:fN(a&&a.p),s:`${nm}, 2020`},{k:"Exposed",v:fN(a&&a.e),s:hzLabel(h)},{k:"% exposed",v:fP(a&&a.r),s:wr?`women 15–49 (2025): ${fP(wr.r)}`:""},
-    {k:"≥ 3 hazards at once",v:fP(m&&m.r[2]),s:m?`${fN(m.n[2])} pregnant women`:"no data"},{k:"Hazards affecting ≥ 25%",v:a?base.filter(x=>x.a.r>=25).length:"–",s:top?`highest: ${hzLabel(top.k)}`:""}];
-  $("#pgTiles").innerHTML=tiles.map(t=>`<div class="tile"><div class="k">${esc(t.k)}</div><div class="v">${esc(t.v)}</div><div class="s">${esc(t.s)}</div></div>`).join("");
-  /* hazard profile */
-  $("#pgHzTitle").textContent=`Pregnant women: % exposed to each hazard, ${nm}`;
-  legend($("#pgLegend"),HZCATS.map((c,i)=>({color:CAT[i],label:c})).concat([{tick:true,label:"Women 15–49, 2025 (same countries)"}]));
-  const llc=isC&&D.countries[mem[0]].ll,isNA=k=>llc&&D.hazards[k].k==="coastal_flood_100yr";
-  const vals=[...Array(NH).keys()].filter(k=>S.comp!=="0"||!D.hazards[k].composite||k===h).map(k=>({k,a:pAgg(k,mem),w:pWra(k,mem),g:pAgg(k,ALL)}))
-    .sort((x,y)=>((y.a&&y.a.r)||0)-((x.a&&x.a.r)||0));
-  if(!cov.length)$("#pgChart").innerHTML='<p class="empty">No pregnancy data for this selection.</p>';
-  else hbar($("#pgChart"),vals.map(x=>({label:hzLabel(x.k),v:isNA(x.k)?null:x.a&&x.a.r,na:isNA(x.k)?"n/a (landlocked)":null,ref:x.w&&x.w.r,color:CAT[HZCATS.indexOf(D.hazards[x.k].cat)],hl:x.k===h,
-    tip:()=>`<b>${esc(hzLabel(x.k))}</b><div class="m">${D.hazards[x.k].cat}${D.hazards[x.k].composite?", composite":""}</div>${tr("Pregnant women exposed",fP(x.a&&x.a.r))}${tr("Number",fN(x.a&&x.a.e))}${tr("Women 15–49, 2025",fP(x.w&&x.w.r))}${tr("Pregnant women, world",fP(x.g&&x.g.r))}`,
-    onClick:()=>setHz(x.k)})),{max:100,fmt:v=>fP(v),fmtAx:t=>t+"%",labelW:300,rowH:22});
-  /* groups x hazards */
-  const k=S.groupingP,gv=groupValues(k),hs=hazCols();
-  const rows=[{label:"World",geo:"world"}].concat(gv.map(v=>({label:v,geo:`g|${k}|${v}`}))).map(r=>{const mm=members(r.geo);return{...r,n:mm.length,nc:pCount(mm),A:hs.map(x=>pAgg(x,mm))};}).filter(r=>r.nc>0);
-  $("#pgHmTitle").textContent=`Pregnant women: % exposed by ${GBY[k].n} and hazard`;
-  heatmap($("#pgHm"),rows.map(r=>({label:`${r.label} (${r.nc}/${r.n})`,hl:S.geo===r.geo,onClick:()=>setGeo(r.geo)})),
-    hs.map(x=>({label:hzLabel(x),hl:x===h,onClick:()=>setHz(x)})),
-    (i,j)=>{const q=rows[i].A[j];return seqCell(q&&q.r,()=>`<b>${esc(rows[i].label)}</b><div class="m">${esc(hzLabel(hs[j]))}</div>${tr("% exposed",fP(q&&q.r))}${tr("Pregnant women exposed",fN(q&&q.e))}${tr("Pregnant women",fN(q&&q.p))}${tr("Countries with data",`${rows[i].nc} of ${rows[i].n}`)}`,()=>setHz(hs[j]));},{labelW:240});
-  legend($("#pgHmLegend"),SEQ.map((c,i)=>({color:c,label:SEQ_LAB[i]})).concat([{color:"var(--nodata)",label:"No data"}]));
-  /* multi-hazard */
-  const w=pMh(ALL);$("#pgMhTitle").textContent=`Pregnant women exposed to at least N hazards, ${nm}`;
-  hbar($("#pgMhChart"),m?D.nk.map((n,i)=>({label:`At least ${n} hazard${n>1?"s":""}`,v:m.r[i],ref:S.geo==="world"?null:w&&w.r[i],color:m.r[i]!=null?SEQ[cls(m.r[i],SEQ_BRK)]:null,
-    tip:()=>`<b>At least ${n}</b>${tr("% of pregnant women",fP(m.r[i]))}${tr("Pregnant women",fN(m.n[i]))}${tr("World",fP(w&&w.r[i]))}`})):[],{max:100,fmt:v=>fP(v),fmtAx:t=>t+"%",labelW:140});
-  /* urban / rural */
-  const ur=[{label:"World",geo:"world"}].concat(groupValues("r").map(v=>({label:v,geo:`g|r|${v}`})));if(S.geo!=="world"&&!ur.some(r=>r.geo===S.geo))ur.push({label:nm,geo:S.geo});
-  $("#pgUrTitle").textContent=`Pregnant women exposed to ${hzLabel(h)}: where they live`;
-  legend($("#pgUrLegend"),URB.map((c,i)=>({color:c,label:URB_LAB[i]})));
-  const tipU=(lab,p)=>{const t=p.reduce((x,y)=>x+y,0);return`<b>${esc(lab)}</b>`+p.map((v,i)=>tr(`<span class="sw" style="background:${URB[i]}"></span>${URB_LAB[i]}`,`${fN(v)} (${fP(t?100*v/t:null)})`)).join("");};
-  stack100($("#pgUrChart"),ur.map(r=>({r,p:pDeg(h,members(r.geo))})).filter(x=>x.p).map(({r,p})=>({label:r.label,parts:p,hl:S.geo===r.geo,tip:()=>tipU(r.label,p),onClick:()=>setGeo(r.geo)})),URB,URB_LAB,{labelW:180});
-  /* combinations */
-  const o=pOv(mem),bits=D.bits;$("#pgCbTitle").textContent=`Most common hazard combinations for pregnant women, ${nm}`;
-  $("#pgCbKey").innerHTML='<span class="lt">Squares, left to right:</span> '+bits.map((b,i)=>`${i+1} ${esc(b.n)}`).join(" · ");
-  const combos=[...o.m.entries()].sort((x,y)=>y[1]-x[1]).slice(0,15);
-  $("#pgCbChart").innerHTML=!combos.length?'<p class="empty">No combinations for this selection.</p>':`<table class="dt"><thead><tr><th>Layers</th><th>Combination</th><th class="n">Pregnant women</th><th class="n">% of pregnant women</th></tr></thead><tbody>`+combos.map(([s,v])=>
-    `<tr><td><span class="combo">${bits.map(b=>`<i class="${s&b.b?"on":""}"></i>`).join("")}</span></td><td>${esc(bits.filter(b=>s&b.b).map(b=>b.n).join(" + "))}</td><td class="n">${fN(v)}</td><td class="n">${fP(o.tp?100*v/o.tp:null)}</td></tr>`).join("")+"</tbody></table>";
-  renderPregTable();
-}
 function pregRows(){const h=S.hz;return ALL.filter(c=>D.preg.cov[c]).map(c=>{const d=D.countries[c],i=h*NC+c,p=D.preg.P[c],e=D.preg.E[i],wp=D.P[pI(GW,c)],we=D.E[eI(h,GW,c)],mp=D.preg.MHP[c],m3=D.preg.MH[2*NC+c];
-  return{c,n:d.n,iso:d.i,code:d.c,reg:gval(c,"r"),inc:gval(c,"y27"),fr:gval(c,"f"),p,e,r:p&&e!=null?100*e/p:null,w:wp&&we!=null?100*we/wp:null,u:D.preg.DU[i],k:D.preg.DC[i],ru:D.preg.DR[i],m3:mp&&m3!=null?100*m3/mp:null};});}
+  return{c,n:d.n,iso:d.i,code:d.c,reg:gval(c,"r"),inc:gval(c,"y27"),dd:gval(c,"d"),fr:gval(c,"f"),ls:gval(c,"l"),p,e,r:p&&e!=null?100*e/p:null,w:wp&&we!=null?100*we/wp:null,u:D.preg.DU[i],k:D.preg.DC[i],ru:D.preg.DR[i],m3:mp&&m3!=null?100*m3/mp:null};});}
 const PGCOLS=[["n","Country or area"],["iso","ISO3"],["reg","UNFPA region"],["inc","Income FY27"],["p","Pregnant women",1],["e","Exposed",1],["r","% exposed",2],["w","Women 15–49 % (2025)",2],["u","Urban centre",1],["k","Urban cluster",1],["ru","Rural",1],["m3","% ≥ 3 hazards",2]];
-function renderPregTable(){
-  $("#pgDtTitle").textContent=`Pregnant women exposed to ${hzLabel(S.hz)}, countries and areas with data (2020)`;
-  let rows=pregRows();const q=S.pgSearch.trim().toLowerCase();
-  if(q)rows=rows.filter(r=>[r.n,r.iso,r.reg,r.inc,r.fr,r.code].join(" ").toLowerCase().includes(q));
-  const k=S.pgSort,dir=S.pgDir;rows.sort((a,b)=>{const x=a[k],y=b[k];if(x==null)return 1;if(y==null)return-1;return(typeof x==="string"?x.localeCompare(y):x-y)*dir;});
-  $("#pgTable").innerHTML=`<table class="dt"><thead><tr>${PGCOLS.map(([k,l,t])=>`<th data-k="${k}" class="${t?"n":""}">${l}${S.pgSort===k?(S.pgDir>0?" ▲":" ▼"):""}</th>`).join("")}</tr></thead><tbody>`+
-    rows.map(r=>`<tr data-c="${r.c}">${PGCOLS.map(([k,l,t])=>`<td class="${t?"n":""}">${t===2?fP(r[k]):t===1?fN(r[k]):esc(r[k])}</td>`).join("")}</tr>`).join("")+
-    `</tbody></table><p class="desc" style="padding:6px 8px;margin:0">${rows.length} rows. ${NC-pCount(ALL)} countries and areas without pregnancy data are not listed. Click a row to select it as the geography.</p>`;
-  document.querySelectorAll("#pgTable th").forEach(th=>th.onclick=()=>{const k=th.dataset.k;if(S.pgSort===k)S.pgDir*=-1;else{S.pgSort=k;S.pgDir=["n","iso","reg","inc"].includes(k)?1:-1;}renderPregTable();});
-  document.querySelectorAll("#pgTable tbody tr").forEach(tr=>tr.onclick=()=>setGeo("c|"+tr.dataset.c));
-}
 function renderUrban(){
-  const k=S.groupingU,vals=groupValues(k);
+  const k=S.groupingU,vals=groupValues(k),P=isPreg(),lab=popLabel();
   const rows=[{label:"World",geo:"world"}].concat(vals.map(v=>({label:v,geo:`g|${k}|${v}`})));
   if(S.geo.startsWith("c|"))rows.push({label:geoName(S.geo),geo:S.geo});
-  $("#urTitle").textContent=`${D.groups[S.g]} exposed to ${hzLabel(S.hz)}: where they live, by ${GBY[k].n}`;
+  $("#urTitle").textContent=`${lab} exposed to ${hzLabel(S.hz)}: where they live, by ${GBY[k].n}, ${popYear()}`;
   legend($("#urLegend"),URB.map((c,i)=>({color:c,label:URB_LAB[i]})));
   const tipU=(lab,p)=>{const t=p.reduce((a,b)=>a+b,0);return`<b>${esc(lab)}</b>`+p.map((v,i)=>tr(`<span class="sw" style="background:${URB[i]}"></span>${URB_LAB[i]}`,`${fN(v)} (${fP(t?100*v/t:null)})`)).join("");};
-  stack100($("#urChart"),rows.map(r=>{const p=degAgg(S.hz,S.g,members(r.geo))||[0,0,0];return{label:r.label,parts:p,hl:S.geo===r.geo,tip:()=>tipU(r.label,p),onClick:()=>setGeo(r.geo)};}),URB,URB_LAB);
-  const mem=members(S.geo),nm=geoName(S.geo);$("#urHzTitle").textContent=`${D.groups[S.g]}: where exposed people live, by hazard, ${nm}`;
-  const hz=[...Array(NH).keys()].filter(h=>S.comp!=="0"||!D.hazards[h].composite||h===S.hz).map(h=>({h,p:degAgg(h,S.g,mem)||[0,0,0]}))
+  /* pregnant women: groups without pregnancy data are dropped rather than shown as "no one exposed" */
+  stack100($("#urChart"),rows.map(r=>({r,p:ADeg(S.hz,members(r.geo))})).filter(x=>x.p||!P).map(({r,p})=>{p=p||[0,0,0];return{label:r.label,parts:p,hl:S.geo===r.geo,tip:()=>tipU(r.label,p),onClick:()=>setGeo(r.geo)};}),URB,URB_LAB);
+  const mem=members(S.geo),nm=geoName(S.geo);$("#urHzTitle").textContent=`${lab}: where exposed people live, by hazard, ${nm}`;
+  if(P&&!pCount(mem)){$("#urHzChart").innerHTML='<p class="empty">No pregnancy data for this selection.</p>';return;}
+  const hz=[...Array(NH).keys()].filter(h=>S.comp!=="0"||!D.hazards[h].composite||h===S.hz).map(h=>({h,p:ADeg(h,mem)||[0,0,0]}))
     .map(x=>({...x,t:x.p[0]+x.p[1]+x.p[2]})).sort((a,b)=>(b.t?b.p[2]/b.t:-1)-(a.t?a.p[2]/a.t:-1));
   stack100($("#urHzChart"),hz.map(x=>({label:hzLabel(x.h),parts:x.p,hl:x.h===S.hz,tip:()=>tipU(hzLabel(x.h),x.p),onClick:()=>setHz(x.h)})),URB,URB_LAB,{labelW:300});
 }
@@ -821,26 +758,27 @@ function renderSsp(){
 function ovAgg(g,mem){const set=new Set(mem),out=new Map();let tp=0;for(const c of mem){const q=D.OVP[pI(g,c)];if(q!=null)tp+=q;}
   const O=D.OV;for(let i=0;i<O.length;i+=4){if(O[i+1]!==g||!set.has(O[i]))continue;out.set(O[i+2],(out.get(O[i+2])||0)+O[i+3]);}return{m:out,tp};}
 function renderMulti(){
-  const mem=members(S.geo),nm=geoName(S.geo),g=S.g,m=mhAgg(g,mem),w=mhAgg(g,ALL);
-  $("#mhTitle").textContent=`${D.groups[g]} exposed to at least N hazards, ${nm}`;
+  const mem=members(S.geo),nm=geoName(S.geo),P=isPreg(),lab=popLabel(),m=AMh(mem),w=AMh(ALL),unit=P?"pregnant women":"group";
+  $("#mhTitle").textContent=`${lab} exposed to at least N hazards, ${nm}, ${popYear()}`;
+  $("#mhDesc").textContent=`From the ${P?"Multi_Hazard_Exposure_pregnant":"Multi_Hazard_Exposure"} sheet, which counts the same 8 climate layers as the combinations below. The black tick is the world value.`;
+  $("#exDesc").textContent=`From the ${P?"Overlapping_Hazards_8Layer_preg":"Overlapping_Hazards_8Layer"} sheet (8 climate layers): ${P?"pregnant women":"people"} exposed to exactly N of the 8.`;
   hbar($("#mhChart"),m?D.nk.map((n,k)=>({label:`At least ${n} hazard${n>1?"s":""}`,v:m.r[k],ref:S.geo==="world"?null:w&&w.r[k],color:m.r[k]!=null?SEQ[cls(m.r[k],SEQ_BRK)]:null,
-    tip:()=>`<b>At least ${n}</b>${tr("% of group",fP(m.r[k]))}${tr("People",fN(m.n[k]))}${tr("World",fP(w&&w.r[k]))}`})):[],{max:100,fmt:v=>fP(v),fmtAx:t=>t+"%",labelW:140});
-  const o=ovAgg(g,mem),bits=D.bits;
+    tip:()=>`<b>At least ${n}</b>${tr(`% of ${unit}`,fP(m.r[k]))}${tr("People",fN(m.n[k]))}${tr("World",fP(w&&w.r[k]))}`})):[],{max:100,fmt:v=>fP(v),fmtAx:t=>t+"%",labelW:140});
+  const o=AOv(mem),bits=D.bits;
   const ex=new Array(bits.length+1).fill(0);o.m.forEach((v,s)=>ex[popcount(s)]+=v);
-  $("#exTitle").textContent=`${D.groups[g]} exposed to exactly N of the 8 layers, ${nm}`;
-  hbar($("#exChart"),ex.slice(1).map((v,i)=>({label:`Exactly ${i+1}`,v:o.tp?100*v/o.tp:null,color:"var(--accent)",tip:()=>`<b>Exactly ${i+1} of 8</b>${tr("People",fN(v))}${tr("% of group",fP(o.tp?100*v/o.tp:null))}`})),{fmt:v=>fP(v),fmtAx:t=>t+"%",labelW:110});
-  $("#coTitle").textContent=`Pairs of hazards: % of ${D.groups[g].toLowerCase()} exposed to both, ${nm}`;
+  $("#exTitle").textContent=`${lab} exposed to exactly N of the 8 layers, ${nm}`;
+  hbar($("#exChart"),o.tp?ex.slice(1).map((v,i)=>({label:`Exactly ${i+1}`,v:100*v/o.tp,color:"var(--accent)",tip:()=>`<b>Exactly ${i+1} of 8</b>${tr("People",fN(v))}${tr(`% of ${unit}`,fP(100*v/o.tp))}`})):[],{fmt:v=>fP(v),fmtAx:t=>t+"%",labelW:110});
+  $("#coTitle").textContent=`Pairs of hazards: % of ${lab.toLowerCase()} exposed to both, ${nm}`;
   const pair=bits.map(a=>bits.map(b=>{let s=0;o.m.forEach((v,sig)=>{if((sig&a.b)&&(sig&b.b))s+=v;});return s;}));
   heatmap($("#coChart"),bits.map(b=>({label:b.n})),bits.map(b=>({label:b.n})),(i,j)=>{const v=o.tp?100*pair[i][j]/o.tp:null;
-    return seqCell(v,()=>`<b>${esc(bits[i].n)}${i!==j?" + "+esc(bits[j].n):""}</b>${tr("People",fN(pair[i][j]))}${tr("% of group",fP(v))}`);},{labelW:140,headH:120,maxCell:52,minCell:30,cellH:30});
+    return seqCell(v,()=>`<b>${esc(bits[i].n)}${i!==j?" + "+esc(bits[j].n):""}</b>${tr("People",fN(pair[i][j]))}${tr(`% of ${unit}`,fP(v))}`);},{labelW:140,headH:120,maxCell:52,minCell:30,cellH:30});
   legend($("#coLegend"),SEQ.map((c,i)=>({color:c,label:SEQ_LAB[i]})));
   $("#cbKey").innerHTML='<span class="lt">Squares, left to right:</span> '+bits.map((b,i)=>`${i+1} ${esc(b.n)}`).join(" · ");
   let combos=[...o.m.entries()].filter(([s])=>S.ovN==="all"||popcount(s)===+S.ovN).sort((a,b)=>b[1]-a[1]).slice(0,15);
   $("#cbTitle").textContent=`Most common combinations, ${nm}`;
   const box=$("#cbChart");
   if(!combos.length){box.innerHTML='<p class="empty">No combinations for this selection.</p>';return;}
-  const mx=combos[0][1];
-  box.innerHTML=`<table class="dt"><thead><tr><th>Layers</th><th>Combination</th><th class="n">People</th><th class="n">% of group</th></tr></thead><tbody>`+combos.map(([s,v])=>
+  box.innerHTML=`<table class="dt"><thead><tr><th>Layers</th><th>Combination</th><th class="n">${P?"Pregnant women":"People"}</th><th class="n">% of ${unit}</th></tr></thead><tbody>`+combos.map(([s,v])=>
     `<tr><td><span class="combo">${bits.map(b=>`<i class="${s&b.b?"on":""}"></i>`).join("")}</span></td><td>${esc(bits.filter(b=>s&b.b).map(b=>b.n).join(" + "))}</td><td class="n">${fN(v)}</td><td class="n">${fP(o.tp?100*v/o.tp:null)}</td></tr>`).join("")+"</tbody></table>";
 }
 function tableRows(){const h=S.hz,g=S.g,i50=D.years.indexOf(2050);
@@ -849,15 +787,16 @@ function tableRows(){const h=S.hz,g=S.g,i50=D.years.indexOf(2050);
       s50:D.SE[seI(1,i50,h,c)],s00:D.SE[seI(1,NY-1,h,c)]};});}
 const DTCOLS=[["n","Country or area"],["iso","ISO3"],["reg","UNFPA region"],["inc","Income FY27"],["st","Status"],["p","Group population",1],["e","People exposed",1],["r","% exposed",2],["u","Urban centre",1],["k","Urban cluster",1],["ru","Rural",1],["s50","SSP2 2050*",1],["s00","SSP2 2100*",1]];
 function renderData(){
-  $("#dtTitle").textContent=`${D.groups[S.g]} exposed to ${hzLabel(S.hz)}, all countries and areas`;
-  let rows=tableRows();const q=S.search.trim().toLowerCase();
+  const P=S.dataset==="preg",cols=P?PGCOLS:DTCOLS,sk=P?"pgSort":"sortCol",sd=P?"pgDir":"sortDir";
+  $("#dtTitle").textContent=P?`Pregnant women exposed to ${hzLabel(S.hz)}, countries and areas with data (2020)`:`${D.groups[S.g]} exposed to ${hzLabel(S.hz)}, all countries and areas (2025)`;
+  let rows=P?pregRows():tableRows();const q=S.search.trim().toLowerCase();
   if(q)rows=rows.filter(r=>[r.n,r.iso,r.reg,r.inc,r.dd,r.fr,r.ls,r.code].join(" ").toLowerCase().includes(q));
-  const k=S.sortCol,dir=S.sortDir;rows.sort((a,b)=>{const x=a[k],y=b[k];if(x==null)return 1;if(y==null)return-1;return(typeof x==="string"?x.localeCompare(y):x-y)*dir;});
-  $("#dtTable").innerHTML=`<table class="dt"><thead><tr>${DTCOLS.map(([k,l,t])=>`<th data-k="${k}" class="${t?"n":""}">${l}${S.sortCol===k?(S.sortDir>0?" ▲":" ▼"):""}</th>`).join("")}</tr></thead><tbody>`+
-    rows.map(r=>`<tr data-c="${r.c}">${DTCOLS.map(([k,l,t])=>`<td class="${t?"n":""}">${t===2?fP(r[k]):t===1?fN(r[k]):esc(r[k])}</td>`).join("")}</tr>`).join("")+
-    `</tbody></table><p class="desc" style="padding:6px 8px;margin:0">${rows.length} rows. *SSP columns: total population exposed under SSP2. Click a row to open its profile.</p>`;
-  document.querySelectorAll("#dtTable th").forEach(th=>th.onclick=()=>{const k=th.dataset.k;if(S.sortCol===k)S.sortDir*=-1;else{S.sortCol=k;S.sortDir=["n","iso","reg","inc"].includes(k)?1:-1;}renderData();});
-  document.querySelectorAll("#dtTable tbody tr").forEach(tr=>tr.onclick=()=>{setGeo("c|"+tr.dataset.c);switchTab("profile");});
+  const k=S[sk],dir=S[sd];rows.sort((a,b)=>{const x=a[k],y=b[k];if(x==null)return 1;if(y==null)return-1;return(typeof x==="string"?x.localeCompare(y):x-y)*dir;});
+  $("#dtTable").innerHTML=`<table class="dt"><thead><tr>${cols.map(([k,l,t])=>`<th data-k="${k}" class="${t?"n":""}">${l}${S[sk]===k?(S[sd]>0?" ▲":" ▼"):""}</th>`).join("")}</tr></thead><tbody>`+
+    rows.map(r=>`<tr data-c="${r.c}">${cols.map(([k,l,t])=>`<td class="${t?"n":""}">${t===2?fP(r[k]):t===1?fN(r[k]):esc(r[k])}</td>`).join("")}</tr>`).join("")+
+    `</tbody></table><p class="desc" style="padding:6px 8px;margin:0">${rows.length} rows. ${P?`${NC-pCount(ALL)} countries and areas without pregnancy data are not listed.`:"*SSP columns: total population exposed under SSP2."} Click a row to open its profile.</p>`;
+  document.querySelectorAll("#dtTable th").forEach(th=>th.onclick=()=>{const k=th.dataset.k;if(S[sk]===k)S[sd]*=-1;else{S[sk]=k;S[sd]=["n","iso","reg","inc","st"].includes(k)?1:-1;}renderData();});
+  document.querySelectorAll("#dtTable tbody tr").forEach(tr=>tr.onclick=()=>{S.geo="c|"+tr.dataset.c;$("#selGeo").value=S.geo;S.sub[S.dataset]="profile";switchSec(S.dataset);});
 }
 function csv(rows){return rows.map(r=>r.map(v=>{v=v==null?"":String(v);return/[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}).join(",")).join("\r\n");}
 function download(name,text){const b=new Blob(["﻿"+text],{type:"text/csv;charset=utf-8"});const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},500);}
@@ -867,25 +806,38 @@ function staticTables(){
   $("#taxTable").innerHTML=tbl(D.taxonomy);$("#metaTable").innerHTML=tbl(D.meta);$("#readmeTable").innerHTML=tbl(D.readme);
   const extra=D.hazards.filter(h=>!h.in_tax).map(h=>h.k);
   $("#notes").innerHTML=`<h2>How to read this dashboard</h2>
+  <h3>Sections</h3><p><b>Population groups</b> (2025): the ${NG} age and sex groups. <b>Pregnant women</b> (2020): the same views from the pregnant-women sheets. <b>Futures (SSP)</b>: total population under SSP1–5 to 2100. <b>Data &amp; notes</b>: country tables, CSV downloads and these notes. The hazard and geography selections carry across sections.</p>
   <h3>Source</h3><p>${esc(D.source_file)}, every sheet: Global_Exposure_2025, Degurba_L1_WorldPop_Exp, Multi_Hazard_Exposure, Overlapping_Hazards_8Layer, SSP_Exposure_Merged, the four pregnant-women sheets (Global_Exposure_2020_pregnant, Degurba_L1_WorldPop_Exp_pregnan, Multi_Hazard_Exposure_pregnant, Overlapping_Hazards_8Layer_preg), Hazard_Taxonomy, Metadata and README. Built ${esc(D.built)}. ${NC} countries and areas, ${NH} hazard layers, ${NG} demographic groups.</p>
   <h3>Group values</h3><p>All group, regional and world values are population-weighted: the sum of people exposed in the member countries divided by the sum of their population. They are not averages of country percentages.</p>
   <h3>Composite hazards</h3><p>Droughts, Heatwaves, Fire and Epidemics (combined) count people exposed to any of their component layers. Do not add them to their components.</p>
   ${extra.length?`<h3>Layer not in the taxonomy</h3><p>The Global sheet has a conflict layer, <code>${esc(extra.join(", "))}</code>, that is not listed in Hazard_Taxonomy. It is shown here as "Complex Emergencies (ACLED, not gridded)", next to the gridded layer the taxonomy lists. It reports higher exposure than the gridded layer. Check with the data producer which one to use.</p>`:""}
   <h3>Demographic groups</h3><p>Inside each country, age and sex groups are exposed at almost the same rate as the total population. Differences between groups in aggregates come mainly from which countries the groups live in.</p>
-  <h3>Pregnant women (2020)</h3><p>Pregnant women come from WorldPop 2020 pregnancy estimates at 1 km, while the ${NG} population groups use WorldPop 2025 at 100 m. They are therefore kept out of the population group list and have their own tab and map measures. Comparisons with women 15–49 (2025) are for context only. The pregnancy estimates cover ${pCount(ALL)} countries and areas, mostly low- and middle-income countries. Elsewhere the sheets hold zero or only a few border pixels. The dashboard treats a country as covered when its pregnant women number at least 1% of its women 15–49 (covered countries are at 4% or more, the others below 0.3%). All other countries are shown as no data and left out of group totals. Group values use covered countries only, and the number of countries with data is shown next to each group.</p>
+  <h3>Pregnant women (2020)</h3><p>Pregnant women come from WorldPop 2020 pregnancy estimates at 1 km, while the ${NG} population groups use WorldPop 2025 at 100 m. They therefore have their own section, with the same views as the population groups except Demographic groups. Comparisons with women 15–49 (2025) are for context only. The pregnancy estimates cover ${pCount(ALL)} countries and areas, mostly low- and middle-income countries. Elsewhere the sheets hold zero or only a few border pixels. The dashboard treats a country as covered when its pregnant women number at least 1% of its women 15–49 (covered countries are at 4% or more, the others below 0.3%). All other countries are shown as no data and left out of group totals. Group values use covered countries only, and the number of countries with data is shown next to each group.</p>
   <h3>Urban and rural</h3><p>The Degurba sheet splits exposed people by GHS-DUG Level 1 class. It has no population per class, so it shows the make-up of exposed people, not exposure rates.</p>
-  <h3>Futures</h3><p>SSP projections cover the total population only, with hazard footprints fixed at 2025. The SSP 2025 population differs from the 2025 exposure sheets for some territories, so compare SSP values with SSP values only. For River Flood (100-yr) the SSP sheet's 2025 world exposure is about double the 2025 exposure sheet's; the Futures tab flags any hazard and geography where the two differ by more than 10%.</p>
+  <h3>Futures</h3><p>SSP projections cover the total population only, with hazard footprints fixed at 2025. The SSP 2025 population differs from the 2025 exposure sheets for some territories, so compare SSP values with SSP values only. For River Flood (100-yr) the SSP sheet's 2025 world exposure is about double the 2025 exposure sheet's; the Futures section flags any hazard and geography where the two differ by more than 10%.</p>
   <h3>Multi-hazard</h3><p>"At least N hazards" comes from the Multi_Hazard_Exposure sheet. Pairs, exact counts and specific combinations come from the Overlapping_Hazards_8Layer sheet, which uses 8 climate layers: ${esc(D.bits.map(b=>b.n).join(", "))}.</p>
   <h3>Maps</h3><p>Robinson projection, UN boundaries; Antarctica not shown. Small islands and territories are drawn as circles so they stay visible. Join: database <code>country_code</code> = shapefile <code>ucode</code>.</p>
   <p class="disclaimer">${esc(DISCLAIMER)}</p>`;
 }
 
 /* ---------- wiring ---------- */
-function switchTab(t){S.tab=t;document.querySelectorAll("#tabs button").forEach(b=>b.setAttribute("aria-selected",b.dataset.tab===t));
+function switchSec(sec){S.sec=sec;
+  document.querySelectorAll("#secs button").forEach(b=>b.setAttribute("aria-selected",b.dataset.sec===sec));
+  document.querySelectorAll("#tabs button").forEach(b=>b.classList.toggle("hidden",!b.dataset.secs.split(" ").includes(sec)));
+  if(MEAS[sec]){S.measure=S.meas[sec];opt($("#selMeasure"),MEAS[sec].map(([v,n])=>({v,n})),S.measure);$("#ctlMeasure").style.display=MEAS[sec].length>1?"":"none";}
+  const note=$("#secNote");
+  if(sec==="preg"){note.style.display="";note.innerHTML=`Pregnant women come from separate sheets built on WorldPop <b>2020</b> pregnancy estimates at <b>1 km</b>, while the population groups use WorldPop <b>2025</b> at <b>100 m</b>, so the two are kept in separate sections. The estimates cover ${pCount(ALL)} countries and areas (low- and middle-income countries). Everywhere else is shown as no data, not as zero, and is left out of totals.`;}
+  else note.style.display="none";
+  switchTab(S.sub[sec]);}
+function switchTab(t){S.tab=t;S.sub[S.sec]=t;
+  document.querySelectorAll("#tabs button").forEach(b=>b.setAttribute("aria-selected",b.dataset.tab===t&&!b.classList.contains("hidden")));
   document.querySelectorAll("section.view").forEach(s=>s.classList.toggle("on",s.id==="v-"+t));
-  const sg=$("#selGrp");sg.disabled=t==="preg";sg.title=t==="preg"?"Not used here: pregnant women are a separate 2020 layer":"";renderTab();}
-function renderTab(){hideTip();try{({map:renderMap,groups:renderGroups,profile:renderProfile,demo:renderDemo,preg:renderPreg,urban:renderUrban,ssp:renderSsp,multi:renderMulti,data:renderData})[S.tab]();}catch(e){console.error(e);}}
-function renderAll(){renderTab();if(S.tab!=="map")renderMap();}
+  $("#ctlGrp").style.display=S.sec==="groups"||(S.tab==="data"&&S.dataset==="groups")?"":"none";
+  $("#ctlGeo").style.display=S.sec==="data"?"none":"";
+  $("#ctlHz").style.display=S.tab==="notes"?"none":"";
+  renderTab();}
+function renderTab(){hideTip();try{({map:renderMap,groups:renderGroups,profile:renderProfile,demo:renderDemo,urban:renderUrban,ssp:renderSsp,multi:renderMulti,data:renderData,notes:()=>{}})[S.tab]();}catch(e){console.error(e);}}
+function renderAll(){renderTab();if(S.tab!=="map"&&S.sec!=="data")renderMap();}
 function opt(sel,items,val){sel.innerHTML=items.map(it=>it.group?`<optgroup label="${esc(it.group)}">${it.items.map(o=>`<option value="${esc(o.v)}">${esc(o.n)}</option>`).join("")}</optgroup>`:`<option value="${esc(it.v)}">${esc(it.n)}</option>`).join("");if(val!=null)sel.value=val;}
 function initControls(){
   opt($("#selHz"),HZCATS.map(c=>({group:c,items:D.hazards.map((h,i)=>({h,i})).filter(x=>x.h.cat===c).map(x=>({v:x.i,n:x.h.n}))})),S.hz);
@@ -897,32 +849,32 @@ function initControls(){
   opt($("#selMapYear"),D.years.slice(1).map(y=>({v:D.years.indexOf(y),n:y})),S.mapYear);
   opt($("#selMapN"),D.nk.map(n=>({v:n,n:`${n}`})),S.mapN);
   opt($("#selGrouping"),GROUPINGS.map(g=>({v:g.k,n:g.n})),S.grouping);opt($("#selGroupingU"),GROUPINGS.map(g=>({v:g.k,n:g.n})),S.groupingU);
-  opt($("#selGroupingP"),GROUPINGS.map(g=>({v:g.k,n:g.n})),S.groupingP);
   opt($("#selCat"),[{v:"all",n:"All categories"}].concat(HZCATS.map(c=>({v:c,n:c}))),S.cat);
   opt($("#selOvN"),[{v:"all",n:"Any number of layers"}].concat(D.bits.map((b,i)=>({v:i+1,n:`Exactly ${i+1} layer${i?"s":""}`}))),S.ovN);
   const on=(id,fn)=>$(id).addEventListener("change",e=>{fn(e.target.value);});
   on("#selHz",v=>{S.hz=+v;renderAll();});on("#selGrp",v=>{S.g=+v;renderAll();});on("#selGeo",v=>{S.geo=v;renderAll();});
-  on("#selMeasure",v=>{S.measure=v;renderMap();});on("#selMapSsp",v=>{S.mapSsp=+v;renderMap();});on("#selMapYear",v=>{S.mapYear=+v;renderMap();});on("#selMapN",v=>{S.mapN=+v;renderMap();});
+  on("#selMeasure",v=>{S.measure=v;S.meas[S.sec]=v;renderMap();});on("#selMapSsp",v=>{S.mapSsp=+v;renderMap();});on("#selMapYear",v=>{S.mapYear=+v;renderMap();});on("#selMapN",v=>{S.mapN=+v;renderMap();});
   on("#selGrouping",v=>{S.grouping=v;renderTab();});on("#selCat",v=>{S.cat=v;renderTab();});on("#chkComp",v=>{S.comp=v;renderTab();});
   on("#selGroupingU",v=>{S.groupingU=v;renderTab();});on("#selSspMeasure",v=>{S.sspM=v;renderTab();});on("#selSsp",v=>{S.ssp=+v;renderTab();});on("#selOvN",v=>{S.ovN=v;renderTab();});
-  on("#selGroupingP",v=>{S.groupingP=v;renderTab();});
-  $("#pgSearch").addEventListener("input",e=>{S.pgSearch=e.target.value;renderPregTable();});
-  $("#pgMapBtn").onclick=()=>{S.measure="ppct";$("#selMeasure").value="ppct";switchTab("map");};
-  $("#pgDl").onclick=()=>{const rows=pregRows();download(`pregnant_women_2020_${slug(hzLabel(S.hz))}.csv`,
-    csv([["country_code","country_name","iso3","unfpa_region","wb_income_fy27","oecd_fragility_2025","hazard","pregnant_women_2020","pregnant_women_exposed","pct_exposed","women_15_49_pct_exposed_2025","exposed_urban_centre","exposed_urban_cluster","exposed_rural","pct_exposed_3plus_hazards"]].concat(
-      rows.map(r=>[r.code,r.n,r.iso,r.reg,r.inc,r.fr,hzLabel(S.hz),r.p,r.e,r.r==null?"":r.r.toFixed(3),r.w==null?"":r.w.toFixed(3),r.u,r.k,r.ru,r.m3==null?"":r.m3.toFixed(3)]))));};
-  $("#pgDlAll").onclick=()=>{const out=[["country_code","country_name","iso3","unfpa_region","hazard_code","hazard","category","pregnant_women_2020","pregnant_women_exposed","pct_exposed"]];
-    for(let h=0;h<NH;h++)for(const c of ALL){if(!D.preg.cov[c])continue;const p=D.preg.P[c],e=D.preg.E[h*NC+c];out.push([D.countries[c].c,D.countries[c].n,D.countries[c].i,gval(c,"r"),D.hazards[h].k,D.hazards[h].n,D.hazards[h].cat,p,e,p&&e!=null?(100*e/p).toFixed(3):""]);}
-    download("pregnant_women_2020_all_hazards.csv",csv(out));};
+  on("#selDataset",v=>{S.dataset=v;switchTab("data");});
   $("#chkMinPop").addEventListener("change",e=>{S.minPop=e.target.checked;renderMapSide();});
   $("#dtSearch").addEventListener("input",e=>{S.search=e.target.value;renderData();});
-  $("#dlTable").onclick=()=>{const rows=tableRows();download(`exposure_${slug(hzLabel(S.hz))}_${slug(D.groups[S.g])}.csv`,
+  $("#dlTable").onclick=()=>{
+    if(S.dataset==="preg"){const rows=pregRows();download(`pregnant_women_2020_${slug(hzLabel(S.hz))}.csv`,
+      csv([["country_code","country_name","iso3","unfpa_region","wb_income_fy27","oecd_fragility_2025","hazard","pregnant_women_2020","pregnant_women_exposed","pct_exposed","women_15_49_pct_exposed_2025","exposed_urban_centre","exposed_urban_cluster","exposed_rural","pct_exposed_3plus_hazards"]].concat(
+        rows.map(r=>[r.code,r.n,r.iso,r.reg,r.inc,r.fr,hzLabel(S.hz),r.p,r.e,r.r==null?"":r.r.toFixed(3),r.w==null?"":r.w.toFixed(3),r.u,r.k,r.ru,r.m3==null?"":r.m3.toFixed(3)]))));return;}
+    const rows=tableRows();download(`exposure_${slug(hzLabel(S.hz))}_${slug(D.groups[S.g])}.csv`,
     csv([["country_code","country_name","iso3","unfpa_region","wb_income_fy27","wb_dd_phase_fy27","oecd_fragility_2025","lldc_sids","group","hazard","group_population","people_exposed","pct_exposed","exposed_urban_centre","exposed_urban_cluster","exposed_rural","ssp2_2050_total_pop_exposed","ssp2_2100_total_pop_exposed"]].concat(
       rows.map(r=>[r.code,r.n,r.iso,r.reg,r.inc,r.dd,r.fr,r.ls,D.groups[S.g],hzLabel(S.hz),r.p,r.e,r.r==null?"":r.r.toFixed(3),r.u,r.k,r.ru,r.s50,r.s00]))));};
-  $("#dlAll").onclick=()=>{const out=[["country_code","country_name","iso3","unfpa_region","group","hazard_code","hazard","category","group_population","people_exposed","pct_exposed"]];
+  $("#dlAll").onclick=()=>{
+    if(S.dataset==="preg"){const out=[["country_code","country_name","iso3","unfpa_region","hazard_code","hazard","category","pregnant_women_2020","pregnant_women_exposed","pct_exposed"]];
+      for(let h=0;h<NH;h++)for(const c of ALL){if(!D.preg.cov[c])continue;const p=D.preg.P[c],e=D.preg.E[h*NC+c];out.push([D.countries[c].c,D.countries[c].n,D.countries[c].i,gval(c,"r"),D.hazards[h].k,D.hazards[h].n,D.hazards[h].cat,p,e,p&&e!=null?(100*e/p).toFixed(3):""]);}
+      download("pregnant_women_2020_all_hazards.csv",csv(out));return;}
+    const out=[["country_code","country_name","iso3","unfpa_region","group","hazard_code","hazard","category","group_population","people_exposed","pct_exposed"]];
     for(let h=0;h<NH;h++)for(const c of ALL){const p=D.P[pI(S.g,c)],e=D.E[eI(h,S.g,c)];out.push([D.countries[c].c,D.countries[c].n,D.countries[c].i,gval(c,"r"),D.groups[S.g],D.hazards[h].k,D.hazards[h].n,D.hazards[h].cat,p,e,p&&e!=null?(100*e/p).toFixed(3):""]);}
     download(`exposure_all_hazards_${slug(D.groups[S.g])}.csv`,csv(out));};
   document.querySelectorAll("#tabs button").forEach(b=>b.onclick=()=>switchTab(b.dataset.tab));
+  document.querySelectorAll("#secs button").forEach(b=>b.onclick=()=>switchSec(b.dataset.sec));
   const modes=["auto","light","dark"];let mi=0;try{const s=localStorage.getItem("hx-theme");if(s)mi=Math.max(0,modes.indexOf(s));}catch(e){}
   const applyTheme=()=>{const m=modes[mi];if(m==="auto")document.documentElement.removeAttribute("data-theme");else document.documentElement.setAttribute("data-theme",m);$("#themeBtn").textContent="Theme: "+m;};
   applyTheme();$("#themeBtn").onclick=()=>{mi=(mi+1)%3;applyTheme();try{localStorage.setItem("hx-theme",modes[mi]);}catch(e){}renderAll();};
@@ -938,7 +890,9 @@ async function load(){
   S.hz=HIDX.extreme_heat_days!=null?HIDX.extreme_heat_days:0;
   $("#disc1").textContent=DISCLAIMER;
   $("#subtitle").textContent=`UNFPA Population Hazard Exposure Database: ${NC} countries and areas, ${NH} hazard layers, ${NG} population groups, 2025 and SSP1–5 to 2100, plus pregnant women (2020)`;
-  $("#loading").remove();initControls();$("#v-map").classList.add("on");buildMap();staticTables();switchTab("map");
+  $("#loading").remove();initControls();$("#v-map").classList.add("on");buildMap();staticTables();
+  $("#secSubGroups").textContent=`${NG} groups, 2025`;$("#secSubPreg").textContent=`${pCount(ALL)} countries and areas, 2020`;
+  switchSec("groups");
 }
 load().catch(e=>{console.error(e);const l=$("#loading");if(l)l.textContent="The dashboard could not load its data: "+e.message;});
 </script>

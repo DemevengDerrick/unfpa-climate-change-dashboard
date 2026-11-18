@@ -4,13 +4,13 @@ Interactive dashboard for the UNFPA Population Hazard Exposure Database (2025 ba
 
 **Open it:** `index.html` is a single self-contained file (about 4.5 MB). It needs no server or internet connection. Open it in a current version of Chrome, Edge, Firefox or Safari.
 
-## Tabs
-- **Map**: choropleth with 5 measures (% exposed, people exposed, rural share, SSP change, ≥ N hazards), 3 pregnant-women measures, and zoom to each UNFPA region.
-- **Compare groups**: UNFPA regions, World Bank income (FY26/FY27), demographic dividend phase, OECD fragility, LLDC/SIDS.
-- **Profile**: any country, area, region or group.
-- **Pregnant women (2020)**: exposure by hazard, by group, to several hazards at once, by urban/rural class and by hazard combination, with a country table and CSV downloads.
-- **Demographic groups**, **Urban & rural** (Degurba), **Futures (SSP)**, **Multi-hazard** (including 8-layer combinations).
-- **Data & notes**: sortable table, CSV downloads, metadata, hazard taxonomy and the database README.
+## Sections
+- **Population groups** (9 age and sex groups, 2025): Map (% exposed, people exposed, rural share, ≥ N hazards), Compare country groups (UNFPA regions, World Bank income FY26/FY27, demographic dividend phase, OECD fragility, LLDC/SIDS), Profile, Demographic groups, Urban & rural (Degurba), Multi-hazard (including 8-layer combinations).
+- **Pregnant women** (2020): the same views as Population groups, except Demographic groups, built from the pregnant-women sheets.
+- **Futures (SSP)** (total population, 2025–2100): Trends under SSP1–5 and a map of the % change in people exposed.
+- **Data & notes**: sortable country tables for either dataset, CSV downloads, notes, metadata, hazard taxonomy and the database README.
+
+The hazard and geography selections carry across sections, and the maps zoom to each UNFPA region.
 
 Group values are population-weighted: total people exposed divided by total population.
 
